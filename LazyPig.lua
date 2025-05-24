@@ -1388,6 +1388,7 @@ raids["Naxxramas"] = true
 raids["The Upper Necropolis"] = true
 raids["Emerald Sanctum"] = true
 raids["Tower of Karazhan"] = true
+raids["???"] = true
 
 local dungeons = {}
 dungeons["Ragefire Chasm"] = true

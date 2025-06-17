@@ -136,7 +136,7 @@ local CheckBoxTables = {
 		[7] = { "LazyPigCheckbox96", "Duel Auto Decline (Shift to ByPass)" },
 		[8] = { "LazyPigCheckbox97", "Instance Resurrection Accept OOC", "Auto Accept Resurrection if OutOfCombat" },
 		[9] = { "LazyPigCheckbox98", "Gossip Auto Processing", "Skip Gossip-Windows-Choises from Innkeepers and FlyMasters" },
-		[11] = { "LazyPigCheckbox100", "Auto Dismount", "Auto-Dismount when it's required by another action" },
+		[10] = { "LazyPigCheckbox100", "Auto Dismount", "Auto-Dismount when it's required by another action" },
 		--[12] = { "LazyPigCheckbox101", "Chat Spam Filter", "One minute ban for identical messages" },
 		--[12] = { "LazyPigCheckbox102", "Block Battleground Quest Sharing", "Really? No more 'Stable' spam?" }
 	},
@@ -213,7 +213,7 @@ function LazyPig_CreateOptionsFrame()
 	frame:SetScale(.81)
 	frame:SetFrameStrata("DIALOG")
 	frame:SetWidth(630)
-	frame:SetHeight(633)
+	frame:SetHeight(643)
 	
 	frame:SetPoint("TOPLEFT", nil, "TOPLEFT", 250, -50)
 	frame:SetBackdrop( {

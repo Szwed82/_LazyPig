@@ -207,11 +207,11 @@ function LazyPig_OnLoad()
 	SetItemRef = LazyPig_SetItemRef_OnEvent;
 	ChatFrame_OnEvent = LazyPig_ChatFrame_OnEvent;
 	StaticPopup_OnShow = LazyPig_StaticPopup_OnShow;
-	
+
 	SLASH_LAZYPIG1 = "/lp";
 	SLASH_LAZYPIG2 = "/lazypig";
 	SlashCmdList["LAZYPIG"] = LazyPig_Command;
-	
+
 	this:RegisterEvent("ADDON_LOADED");
 	this:RegisterEvent("PLAYER_LOGIN")
 	--this:RegisterEvent("PLAYER_ENTERING_WORLD")
@@ -226,7 +226,7 @@ function LazyPig_Command()
 		if getglobal("LazyPigOptionsFrameKeibindsButton"):GetText() == "Hide Keybinds" then
 			LazyPigKeybindsFrame:Show()
 		end
-	end	
+	end
 end
 
 function LazyPig_OnUpdate()
@@ -240,17 +240,17 @@ function LazyPig_OnUpdate()
 	local shiftstatus = IsShiftKeyDown();
 	local ctrlstatus = IsControlKeyDown();
 	local altstatus = IsAltKeyDown();
-	
+
 	if shiftstatus then
 		shift_time = current_time
 	elseif altstatus and not ctrlstatus and current_time > alttime then
 		alttime = current_time + 0.75
 	elseif not altstatus and ctrlstatus and current_time > ctrltime then
 		ctrltime = current_time + 0.75
-	elseif not altstatus and not ctrlstatus or altstatus and ctrlstatus then 
+	elseif not altstatus and not ctrlstatus or altstatus and ctrlstatus then
 		ctrltime = 0
 		alttime = 0
-	end	
+	end
 	if ctrlstatus and not shiftstatus and altstatus and current_time > ctrlalttime then
 		ctrlalttime = current_time + 0.75
 	elseif ctrlstatus and shiftstatus and not altstatus and current_time > ctrlshifttime then
@@ -262,8 +262,8 @@ function LazyPig_OnUpdate()
 		ctrlalttime = 0
 		altshifttime = 0
 	end
-		
-	if shift_time == current_time  then	
+
+	if shift_time == current_time  then
 		if not (UnitExists("target") and UnitIsUnit("player", "target")) then
 			--
 		elseif not battleframe then
@@ -275,12 +275,12 @@ function LazyPig_OnUpdate()
 	elseif battleframe then
 		battleframe = nil
 	end
-			
+
 	if LPCONFIG.SPECIALKEY then
 		if ctrlstatus and shiftstatus and altstatus and current_time > delayaction then
 			delayaction = current_time + 1
 			Logout();
-		elseif ctrlstatus and not shiftstatus and altstatus and not auctionstatus and not mailstatus and current_time > delayaction then	
+		elseif ctrlstatus and not shiftstatus and altstatus and not auctionstatus and not mailstatus and current_time > delayaction then
 			if tradestatus then
 				AcceptTrade();
 			elseif not tradestatus and UnitExists("target") and UnitIsPlayer("target") and UnitIsFriend("target", "player") and not UnitIsUnit("player", "target") and CheckInteractDistance("target", 2) and (current_time + 0.25) > ctrlalttime and current_time > tradedelay then
@@ -294,9 +294,9 @@ function LazyPig_OnUpdate()
 			delayaction = current_time + 1.5
 			InspectUnit("target");
 		end
-			
+
 		if ctrlstatus and not shiftstatus and altstatus or passpopup > current_time then
-			if current_time > delayaction and not LazyPig_BindLootOpen() and not LazyPig_RollLootOpen() and LazyPig_GreenRoll() then	
+			if current_time > delayaction and not LazyPig_BindLootOpen() and not LazyPig_RollLootOpen() and LazyPig_GreenRoll() then
 				delayaction = current_time + 1
 			elseif current_time > delayaction then
 				for i=1,STATICPOPUP_NUMDIALOGS do
@@ -313,77 +313,79 @@ function LazyPig_OnUpdate()
 						end
 					end
 				end
-			end	
+			end
 		end
-		
+
 		if ctrlstatus and not shiftstatus and altstatus then
 			if current_time > delayaction then
 				if auctionstatus and AuctionFrameAuctions and AuctionFrameAuctions:IsVisible() and AuctionsCreateAuctionButton then
 					ScheduleButtonClick(AuctionsCreateAuctionButton, 0);
-				elseif auctionstatus and AuctionFrameBrowse and AuctionFrameBrowse:IsVisible() and BrowseBuyoutButton then	
+				elseif auctionstatus and AuctionFrameBrowse and AuctionFrameBrowse:IsVisible() and BrowseBuyoutButton then
 					ScheduleButtonClick(BrowseBuyoutButton, 0.55);
 				elseif CT_MailFrame and CT_MailFrame:IsVisible() and CT_MailFrame.num > 0 and strlen(CT_MailNameEditBox:GetText()) > 0 and CT_Mail_AcceptSendFrameSendButton then
 					ScheduleButtonClick(CT_Mail_AcceptSendFrameSendButton, 1.25);
 				elseif GMailFrame and GMailFrame:IsVisible() and GMailFrame.num > 0 and strlen(GMailSubjectEditBox:GetText()) > 0 and GMailAcceptSendFrameSendButton then
 					ScheduleButtonClick(GMailAcceptSendFrameSendButton, 1.25);
-				elseif mailstatus and SendMailFrame and SendMailFrame:IsVisible() and SendMailMailButton then					
+				elseif mailstatus and SendMailFrame and SendMailFrame:IsVisible() and SendMailMailButton then
 					ScheduleButtonClick(SendMailMailButton, 0);
 				elseif mailstatus and OpenMailFrame and OpenMailFrame:IsVisible() then
 					if OpenMailFrame.money and OpenMailMoneyButton then
 						ScheduleButtonClick(OpenMailMoneyButton, 0);
 					elseif OpenMailPackageButton then
 						ScheduleButtonClick(OpenMailPackageButton, 0);
-					end	
-				end	
+					end
+				end
 			end
 			LazyPig_AutoLeaveBG();
 		elseif not ctrlstatus and shiftstatus and altstatus and current_time > delayaction then
 			if auctionstatus and AuctionFrameBrowse and AuctionFrameBrowse:IsVisible() and BrowseBidButton then
 				ScheduleButtonClick(BrowseBidButton, 0.55);
-			end	
-		end	
+			end
+		end
 	end
-	
+
 	if merchantstatus and shiftstatus and current_time > last_click and not CursorHasItem() then
 		last_click = current_time + 0.25
 		LazyPig_GreySellRepair();
 	end
-	
-	if shiftstatus or altstatus then
-		if QuestFrameDetailPanel:IsVisible() then
-			AcceptQuest();
+
+	if not QuestHaste then
+		if shiftstatus or altstatus then
+			if QuestFrameDetailPanel:IsVisible() then
+				AcceptQuest();
+			end
+		elseif QuestRecord["details"] and not shiftstatus then
+			LazyPig_RecordQuest();
 		end
-	elseif QuestRecord["details"] and not shiftstatus then
-		LazyPig_RecordQuest();
 	end
-	
+
 	if not afk_active and player_bg_confirm then
 		Check_Bg_Status();
 	end
-	
+
 	if bgstatus ~= 0 and (bgstatus + 0.5) > current_time then
 		bgstatus = 0
 		Check_Bg_Status()
 		LazyPig_AutoLeaveBG()
-	end	
-		
+	end
+
 	if(current_time - roster_task_refresh) > 29 then
 		roster_task_refresh = current_time
 		GuildRoster();
 		ChatSpamClean();
 	end
-	
+
 	if player_summon_confirm then
 		LazyPig_AutoSummon();
 	end
-	
+
 	LazyPig_CheckSalvation();
 	LazyPig_CheckManaBuffs();
 	ScheduleButtonClick();
 	ScheduleFunctionLaunch();
 	ScheduleItemSplit();
 	LazyPig_WatchSplit();
-	
+
 end
 
 function ScheduleButtonClick(button, delay)
@@ -425,7 +427,7 @@ function LazyPig_OnEvent(event)
 		local LP_TITLE = GetAddOnMetadata("_LazyPig", "Title")
 		local LP_VERSION = GetAddOnMetadata("_LazyPig", "Version")
 		local LP_AUTHOR = GetAddOnMetadata("_LazyPig", "Author")
-		
+
 		DEFAULT_CHAT_FRAME:AddMessage(LP_TITLE .. " v" .. LP_VERSION .. " by " .."|cffFF0066".. LP_AUTHOR .."|cffffffff".. " loaded, type".."|cff00eeee".." /lp".."|cffffffff for options")
 	elseif (event == "PLAYER_LOGIN") then
 	--if (event == "PLAYER_ENTERING_WORLD") then
@@ -456,7 +458,7 @@ function LazyPig_OnEvent(event)
 		this:RegisterEvent("MAIL_SHOW")
 		this:RegisterEvent("MAIL_CLOSED")
 		this:RegisterEvent("AUCTION_HOUSE_SHOW")
-		this:RegisterEvent("AUCTION_HOUSE_CLOSED")	
+		this:RegisterEvent("AUCTION_HOUSE_CLOSED")
 		this:RegisterEvent("BANKFRAME_OPENED")
 		this:RegisterEvent("BANKFRAME_CLOSED")
 		this:RegisterEvent("ZONE_CHANGED_NEW_AREA")
@@ -466,7 +468,7 @@ function LazyPig_OnEvent(event)
 		this:RegisterEvent("UPDATE_BONUS_ACTIONBAR")
 		this:RegisterEvent("UNIT_INVENTORY_CHANGED")
 		this:RegisterEvent("UI_INFO_MESSAGE")
-		
+
 		LazyPigOptionsFrame = LazyPig_CreateOptionsFrame()
 		LazyPigKeybindsFrame = LazyPig_CreateKeybindsFrame()
 
@@ -483,7 +485,7 @@ function LazyPig_OnEvent(event)
 		if LPCONFIG.CAM then SetCVar("cameraDistanceMax",50) end
 		if LPCONFIG.LOOT then UIPanelWindows["LootFrame"] = nil end
 		QuestRecord["index"] = 0
-		
+
 		--TargetUnit("player")
 		--SendChatMessage(".xp 8", "SAY") --qgaming version
 		--SendChatMessage(".exp 5", "SAY") --scriptcraft version
@@ -492,29 +494,29 @@ function LazyPig_OnEvent(event)
 		LazyPig_CheckSalvation()
 	elseif (LPCONFIG.REMOVEMANABUFFS and (event == "PLAYER_AURAS_CHANGED" or event == "UPDATE_BONUS_ACTIONBAR" and LazyPig_PlayerClass("Druid", "player") or event == "UNIT_INVENTORY_CHANGED"))then
 		LazyPig_CheckManaBuffs()
-		
+
 	elseif(event == "DUEL_REQUESTED") then
 		duel_active = true
 		if LPCONFIG.DUEL and not IsShiftKeyDown() then --dnd_active and
 			duel_active = nil
 			CancelDuel()
 			UIErrorsFrame:AddMessage(arg1.." - Duel Cancelled")
-		end	
-	
+		end
+
 	elseif(event == "PLAYER_DEAD") then
 		if LPCONFIG.RBG and LazyPig_BG() then
 			RepopMe();
-		end	
-	
+		end
+
 	elseif(event == "ZONE_CHANGED_NEW_AREA" or event == "PLAYER_UNGHOST") then
-		if event == "ZONE_CHANGED_NEW_AREA" then 
+		if event == "ZONE_CHANGED_NEW_AREA" then
 			tradestatus = nil
 			mailstatus = nil
 			auctionstatus = nil
 			bankstatus = nil
 			wsgefc = nil
 		end
-		
+
 		ScheduleFunctionLaunch(LazyPig_RefreshNameplates, 0.25)
 		ScheduleFunctionLaunch(LazyPig_ZoneCheck, 5)
 		ScheduleFunctionLaunch(LazyPig_ZoneCheck, 6)
@@ -523,19 +525,19 @@ function LazyPig_OnEvent(event)
 	elseif(event == "BANKFRAME_OPENED") then
 		bankstatus = true
 		tmp_splitval = 1
-		
+
 	elseif(event == "BANKFRAME_CLOSED") then
 		bankstatus = false
 		LazyPig_EndSplit()
-	
+
 	elseif(event == "AUCTION_HOUSE_SHOW") then
 		auctionstatus = true
 		auctionbrowse = nil
 		tmp_splitval = 1
-		
+
 	elseif(event == "AUCTION_HOUSE_CLOSED") then
 		auctionstatus = false
-		LazyPig_EndSplit()	
+		LazyPig_EndSplit()
 
 	elseif(event == "MAIL_SHOW") then
 		mailstatus = true
@@ -544,30 +546,30 @@ function LazyPig_OnEvent(event)
 	elseif(event == "MAIL_CLOSED") then
 		mailstatus = false
 		LazyPig_EndSplit()
-		
+
 	elseif(event == "MERCHANT_SHOW") then
 		merchantstatus = true
 		GreySell = {}
-	
+
 	elseif(event == "MERCHANT_CLOSED") then
 		merchantstatus = false
-	
-	elseif(event == "TRADE_SHOW") then	
+
+	elseif(event == "TRADE_SHOW") then
 		tradestatus = true
 		tmp_splitval = 1
-	
-	elseif(event == "TRADE_CLOSED") then	
+
+	elseif(event == "TRADE_CLOSED") then
 		tradedelay = GetTime() + 1
 		tradestatus = false
-		LazyPig_EndSplit()	
-			
+		LazyPig_EndSplit()
+
 	elseif(event == "START_LOOT_ROLL") then
 		LazyPig_AutoRoll(arg1)
-	
+
 	-- elseif(event == "CHAT_MSG_LOOT") then
 	-- 	if (string.find(arg1 ,"You won") or string.find(arg1 ,"You receive")) and (string.find(arg1 ,"cffa335e") or string.find(arg1, "cff0070d") or string.find(arg1, "cffff840")) and not string.find(arg1 ,"Bijou") and not string.find(arg1 ,"Idol") and not string.find(arg1 ,"Shard") then
 	-- 	end
-	
+
 	elseif(event == "UI_ERROR_MESSAGE") then
 		if(string.find(arg1, "mounted") or string.find(arg1, "while silenced")) and LPCONFIG.DISMOUNT then
 			UIErrorsFrame:Clear()
@@ -582,18 +584,18 @@ function LazyPig_OnEvent(event)
 	elseif (event == "UI_INFO_MESSAGE") then
 		if string.find(arg1 ,"Duel cancelled") then
 			duel_active = nil
-		end	
+		end
 	elseif (event == "CHAT_MSG_SYSTEM") then
 		if arg1 == CLEARED_DND or arg1 == CLEARED_AFK then
 			dnd_active = false
 			afk_active = false
 			Check_Bg_Status()
-			
+
 		elseif(string.find(arg1, string.sub(MARKED_DND, 1, string.len(MARKED_DND) -3))) then
 			afk_active = false
 			dnd_active = true
 			--if LPCONFIG.DUEL then CancelDuel() UIErrorsFrame:AddMessage("Duel Decline Atctive - DND") end
-		
+
 		elseif(string.find(arg1, string.sub(MARKED_AFK, 1, string.len(MARKED_AFK) -2))) then
 			afk_active = true
 			if LPCONFIG.EBG and not LazyPig_Raid() and not LazyPig_Dungeon() then UIErrorsFrame:AddMessage("Auto Join BG Inactive - AFK") end
@@ -604,7 +606,7 @@ function LazyPig_OnEvent(event)
 			elseif GetNumPartyMembers() > 1 then
 				SendChatMessage(arg1, "PARTY");
 			end
-			
+
 		elseif string.find(arg1 ,"completed.") then
 			LazyPig_FixQuest(arg1)
 			QuestRecord["progress"] = nil
@@ -614,7 +616,7 @@ function LazyPig_OnEvent(event)
 		elseif string.find(arg1 ,"in a duel") then
 			duel_active = nil
 		end
-	
+
 	elseif(event == "QUEST_GREETING") then
 		ActiveQuest = {}
 		AvailableQuest = {}
@@ -623,38 +625,38 @@ function LazyPig_OnEvent(event)
 		end
 		for i=1, GetNumAvailableQuests() do
 			AvailableQuest[i] = GetAvailableTitle(i).." "..GetAvailableLevel(i)
-		end	
-	
+		end
+
 		LazyPig_ReplyQuest(event);
-		
+
 		--DEFAULT_CHAT_FRAME:AddMessage("active_: "..table.getn(ActiveQuest))
-		--DEFAULT_CHAT_FRAME:AddMessage("available_: "..table.getn(AvailableQuest))			
-	
+		--DEFAULT_CHAT_FRAME:AddMessage("available_: "..table.getn(AvailableQuest))
+
 	elseif(event == "GOSSIP_SHOW") then
 		local GossipOptions = {};
 		local dsc = nil
 		local gossipnr = nil
 		local gossipbreak = nil
 		local processgossip = (IsShiftKeyDown() and not LPCONFIG.GOSSIP) or (LPCONFIG.GOSSIP and not IsShiftKeyDown())
-		
-		dsc,GossipOptions[1],_,GossipOptions[2],_,GossipOptions[3],_,GossipOptions[4],_,GossipOptions[5] = GetGossipOptions()	
+
+		dsc,GossipOptions[1],_,GossipOptions[2],_,GossipOptions[3],_,GossipOptions[4],_,GossipOptions[5] = GetGossipOptions()
 
 		ActiveQuest = LazyPig_ProcessQuests(GetGossipActiveQuests())
 		AvailableQuest = LazyPig_ProcessQuests(GetGossipAvailableQuests())
-		
+
 		if QuestRecord["qnpc"] ~= UnitName("target") then
 			QuestRecord["index"] = 0
 			QuestRecord["qnpc"] = UnitName("target")
 		end
-		
-		if table.getn(AvailableQuest) ~= 0 or table.getn(ActiveQuest) ~= 0 then 
-			gossipbreak = true 
+
+		if table.getn(AvailableQuest) ~= 0 or table.getn(ActiveQuest) ~= 0 then
+			gossipbreak = true
 		end
-		
+
 		--DEFAULT_CHAT_FRAME:AddMessage("gossip: "..table.getn(GossipOptions))
 		--DEFAULT_CHAT_FRAME:AddMessage("active: "..table.getn(ActiveQuest))
 		--DEFAULT_CHAT_FRAME:AddMessage("available: "..table.getn(AvailableQuest))
-		
+
 		for i=1, getn(GossipOptions) do
 			if GossipOptions[i] == "binder" then
 				local bind = GetBindLocation();
@@ -678,29 +680,29 @@ function LazyPig_OnEvent(event)
 				LazyPig_Dismount();
 			end
 		end
-		
+
 		if not gossipbreak and gossipnr then
 			SelectGossipOption(gossipnr);
 		else
 			LazyPig_ReplyQuest(event);
-		end	
+		end
 
 	elseif(event == "QUEST_PROGRESS" or event == "QUEST_COMPLETE") then
 		LazyPig_ReplyQuest(event);
-		
+
 	elseif (event == "CHAT_MSG_BG_SYSTEM_ALLIANCE" or event == "CHAT_MSG_BG_SYSTEM_HORDE") then
 		--DEFAULT_CHAT_FRAME:AddMessage(event.." - "..arg1);
 		LazyPig_Track_EFC(arg1)
-		
+
 	elseif(event == "UPDATE_BATTLEFIELD_STATUS" and not afk_active or event == "CHAT_MSG_BG_SYSTEM_NEUTRAL" and arg1 and string.find(arg1, "wins!")) then
 		bgstatus = GetTime()
-			
+
 	elseif(event == "BATTLEFIELDS_SHOW") then
 		LazyPig_QueueBG();
 
-	elseif (event == "CONFIRM_SUMMON") then	
+	elseif (event == "CONFIRM_SUMMON") then
 		LazyPig_AutoSummon();
-			
+
 	elseif(event == "PARTY_INVITE_REQUEST") then
 		local check1 = not LPCONFIG.DINV or LPCONFIG.DINV and not LazyPig_BG() and not LazyPig_Queue()
 		local check2 = LPCONFIG.GINV and IsGuildMate(arg1) or LPCONFIG.FINV and IsFriend(arg1) or not IsGuildMate(arg1) and not IsFriend(arg1) and LPCONFIG.SINV
@@ -712,13 +714,13 @@ function LazyPig_OnEvent(event)
 		TargetByName(arg1, true)
 		if GetCorpseRecoveryDelay() == 0 and (LazyPig_Raid() or LazyPig_Dungeon() or LazyPig_BG()) and UnitIsPlayer("target") and UnitIsVisible("target") and not UnitAffectingCombat("target") then
 			AcceptResurrect()
-			StaticPopup_Hide("RESURRECT_NO_TIMER"); 
+			StaticPopup_Hide("RESURRECT_NO_TIMER");
 			StaticPopup_Hide("RESURRECT_NO_SICKNESS");
 			StaticPopup_Hide("RESURRECT");
 		end
 		TargetLastTarget();
 	end
-	--DEFAULT_CHAT_FRAME:AddMessage(event);	
+	--DEFAULT_CHAT_FRAME:AddMessage(event);
 end
 
 function LazyPig_StaticPopup_OnShow()
@@ -726,17 +728,17 @@ function LazyPig_StaticPopup_OnShow()
 		UIErrorsFrame:Clear();
 		UIErrorsFrame:AddMessage("Quest Blocked Successfully");
 		this:Hide();
-		
+
 	else
 		Original_StaticPopup_OnShow();
-	end	
+	end
 end
- 
-function MailtoCheck(msg) 
+
+function MailtoCheck(msg)
 	if MailTo_Option then -- to avoid conflicts with mailto addon
 		local disable = LPCONFIG.RIGHT or LPCONFIG.SHIFT
 		MailTo_Option.noshift = disable
-		MailTo_Option.noauction = disable 
+		MailTo_Option.noauction = disable
 		MailTo_Option.notrade = disable
 		MailTo_Option.noclick = disable
 		if msg then DEFAULT_CHAT_FRAME:AddMessage("_LazyPig: Warning Improved Right Click and Easy Split/Merge features may override MailTo addon functionality !") end
@@ -783,7 +785,7 @@ local function LazyPig_ItemUnderCursor()
 			y = y + 25;
 		end
 		LootFrame:SetPoint("TOPLEFT", "UIParent", "BOTTOMLEFT", x, y);
-	end	
+	end
 end
 
 function LazyPig_LootFrame_OnEvent(event)
@@ -832,18 +834,18 @@ function LazyPig_AutoSummon()
 			player_summon_message = true
 			player_summon_confirm = true
 			DEFAULT_CHAT_FRAME:AddMessage("LazyPig: Auto Summon in "..math.floor(expireTime).."s", 1.0, 1.0, 0.0);
-			
+
 		elseif expireTime <= 3 or keyenter then
 			player_summon_confirm = false
 			player_summon_message = false
-				
+
 			for i=1,STATICPOPUP_NUMDIALOGS do
 				local frame = getglobal("StaticPopup"..i)
-				if frame.which == "CONFIRM_SUMMON" and frame:IsShown() then	
+				if frame.which == "CONFIRM_SUMMON" and frame:IsShown() then
 					ConfirmSummon();
 					delayaction = GetTime() + 0.75
 					StaticPopup_Hide("CONFIRM_SUMMON");
-				end	
+				end
 			end
 		elseif expireTime == 0 then
 			player_summon_confirm = false
@@ -860,7 +862,7 @@ end
 function Check_Bg_Status()
 	local player_bg_active = false
 	local player_bg_request = false
-	
+
 	for i=1, MAX_BATTLEFIELD_QUEUES do
 		local status, mapName, instanceID = GetBattlefieldStatus(i);
 		for k in pairs(bgStatus[i]) do
@@ -869,20 +871,20 @@ function Check_Bg_Status()
 		bgStatus[i]["status"] = status;
 		bgStatus[i]["map"] = mapName;
 		bgStatus[i]["id"] = instanceID;
-		
+
 		if(status == "confirm" ) then
 			player_bg_request = true
 		elseif((status == "active") and not (mapName == "Eastern Kingdoms") and not (mapName == "Kalimdor")) then
 			player_bg_active = true
 		end
 	end
-	
+
 	player_bg_confirm = player_bg_request
-	
+
 	if(player_bg_message and not player_bg_active and not player_bg_request) then
 		player_bg_message = false
 	end
-	
+
 	if(not player_bg_active and player_bg_request) then
 		local index = 1
 		while bgStatus[index] do
@@ -891,11 +893,11 @@ function Check_Bg_Status()
 			end
 			index = index + 1
 		end
-	end	
+	end
 end
 
 function LazyPig_QueueBG()
-	if LPCONFIG.QBG then	
+	if LPCONFIG.QBG then
 		for i=1, MAX_BATTLEFIELD_QUEUES do
 			local status = GetBattlefieldStatus(i);
 			if IsShiftKeyDown() and (status == "queued" or status == "confirm") then
@@ -909,12 +911,12 @@ function LazyPig_QueueBG()
 		end
 		ClearTarget();
 		BattlefieldFrameCancelButton:Click()
-	end	
-end		
+	end
+end
 
-function LazyPig_AutoJoinBG(index, map_name)	
+function LazyPig_AutoJoinBG(index, map_name)
 	local keyenter = IsAltKeyDown() and IsControlKeyDown() and not tradestatus and not mailstatus and not auctionstatus and GetTime() > delayaction and GetTime() > (tradedelay + 0.5)
-	if LPCONFIG.EBG or keyenter then	
+	if LPCONFIG.EBG or keyenter then
 		local expireTime = GetBattlefieldPortExpiration(index)/1000
 		expireTime = math.floor(expireTime);
 		if not player_bg_message and expireTime > 3 and GetTime() > delayaction then
@@ -928,8 +930,8 @@ function LazyPig_AutoJoinBG(index, map_name)
 			if player_bg_message then
 				player_bg_message = false
 			end
-		end	
-	end	
+		end
+	end
 end
 
 function LazyPig_AutoLeaveBG()
@@ -937,12 +939,12 @@ function LazyPig_AutoLeaveBG()
 	if LPCONFIG.LBG or keyenter then
 		local bg_winner = GetBattlefieldWinner()
 		local winner_name = "Alliance"
-		if bg_winner ~= nil then	
+		if bg_winner ~= nil then
 			if bg_winner == 0 then winner_name = "Horde" end
 			UIErrorsFrame:Clear();
 			UIErrorsFrame:AddMessage(winner_name.." Wins");
 			LeaveBattlefield();
-		end	
+		end
 	end
 end
 
@@ -980,21 +982,21 @@ function LazyPig_AutoRoll(id)
 
 	local _, name, _, quality = GetLootRollItemInfo(id)
 
-	if LPCONFIG.ZG and zone == "Zul'Gurub" then										 
+	if LPCONFIG.ZG and zone == "Zul'Gurub" then
 		if string.find(name, "Hakkari Bijou") or string.find(name, "Coin") then
 			cfg = LPCONFIG.ZG
 			RollOnLoot(id, LPCONFIG.ZG);
 		end
 	end
 
-	if LPCONFIG.MC and zone == "Molten Core" then	
+	if LPCONFIG.MC and zone == "Molten Core" then
 		if string.find(name, "Fiery Core") or string.find(name, "Lava Core") or string.find(name, "Blood of the Mountain") then
 			cfg = LPCONFIG.MC
 			RollOnLoot(id, LPCONFIG.MC);
-		end	
+		end
 	end
-	
-	if LPCONFIG.AQ and string.find(zone,"Ahn'Qiraj") then	
+
+	if LPCONFIG.AQ and string.find(zone,"Ahn'Qiraj") then
 		if not string.find(name, "Scarab Brooch") and not string.find(name, "Petrified Scarab") then
 			if string.find(name, "Scarab") or string.find(name, "Idol") then
 				cfg = LPCONFIG.AQ
@@ -1002,47 +1004,47 @@ function LazyPig_AutoRoll(id)
 			end
 		end
 	end
-	
-	if LPCONFIG.AQMOUNT and string.find(zone,"Ahn'Qiraj") then	
+
+	if LPCONFIG.AQMOUNT and string.find(zone,"Ahn'Qiraj") then
 		if string.find(name, "Blue Qiraji Resonating") or string.find(name, "Green Qiraji Resonating") or string.find(name, "Yellow Qiraji Resonating") then
 			cfg = LPCONFIG.AQMOUNT
 			RollOnLoot(id, LPCONFIG.AQMOUNT);
-		end	
-	end	
-	
-	if LPCONFIG.SAND then	
+		end
+	end
+
+	if LPCONFIG.SAND then
 		if string.find(name ,"Corrupted Sand") then
 			cfg = LPCONFIG.SAND
 			RollOnLoot(id, LPCONFIG.SAND);
 		end
 	end
 
-	if LPCONFIG.NAXX and zone == "Naxxramas" then	
+	if LPCONFIG.NAXX and zone == "Naxxramas" then
 		if string.find(name, "Wartorn") or string.find(name, "Thawing") then
 			cfg = LPCONFIG.NAXX
 			RollOnLoot(id, LPCONFIG.NAXX);
-		end	
+		end
 	end
 
-	if LPCONFIG.BWL and string.find(zone, "Blackwing") then	
+	if LPCONFIG.BWL and string.find(zone, "Blackwing") then
 		if string.find(name, "Hourglass Sand") or string.find(name, "Elementium Ore") then
 			cfg = LPCONFIG.BWL
 			RollOnLoot(id, LPCONFIG.BWL)
-		end	
+		end
 	end
-	
+
 	-- Hard coded auto need for Necrotic Runes
 	if string.find(name, "Necrotic Rune") then
 		cfg = 1
 		RollOnLoot(id, 1);
 	end
-	
+
 	-- Config for "White" tailoring items (Cloth, Spider Silk)
 	if LPCONFIG.WHITE_TAILORING and quality == 1 and (string.find(name, "loth") or string.find(name, "Silk")) then
 		cfg = LPCONFIG.WHITE_TAILORING
 		RollOnLoot(id, LPCONFIG.WHITE_TAILORING)
 	end
-	
+
 	-- Config for Food and Drink
 	if LPCONFIG.FOOD_AND_DRINK and quality == 1 then
 		local itemLink = GetLootRollItemLink(id);
@@ -1067,7 +1069,7 @@ function LazyPig_AutoRoll(id)
 		local _, _, _, hex = GetItemQualityColor(quality)
 		DEFAULT_CHAT_FRAME:AddMessage("LazyPig: Auto "..hex..RollReturn(cfg).." "..GetLootRollItemLink(id))
 	end
-	
+
 	-- Auto accept BoP for things that are auto rolled. Like Corrupted Sand and Necrotic Runes
 	for i=1,STATICPOPUP_NUMDIALOGS do
 		local frame = getglobal("StaticPopup"..i)
@@ -1090,7 +1092,7 @@ function LazyPig_GreenRoll()
 		return txt
 	end
 	local pass = nil
-	if LPCONFIG.GREEN then	
+	if LPCONFIG.GREEN then
 		for i=1, NUM_GROUP_LOOT_FRAMES do
 			local frame = getglobal("GroupLootFrame"..i);
 			if frame:IsVisible() then
@@ -1105,7 +1107,7 @@ function LazyPig_GreenRoll()
 				end
 			end
 		end
-	end	
+	end
 	return pass
 end
 
@@ -1113,18 +1115,18 @@ function LazyPig_GreySellRepair()
 	local bag, slot = LazyPig_BagReturn("ff9d9d9d")
 	if bag and slot then
 		local _, _, locked = GetContainerItemInfo(bag, slot)
-		if bag and slot and not locked then	
+		if bag and slot and not locked then
 			UseContainerItem(bag,slot)
 			if not(GreySell.bag == bag and GreySell.slot == slot) then
 				DEFAULT_CHAT_FRAME:AddMessage("LazyPig: Selling "..GetContainerItemLink(bag, slot))
 				GreySell.bag = bag
 				GreySell.slot = slot
-			end	
+			end
 		end
 	elseif CanMerchantRepair() then
 		local rcost = GetRepairAllCost()
 		if rcost and rcost ~= 0 then
-			if rcost > GetMoney() then 
+			if rcost > GetMoney() then
 				DEFAULT_CHAT_FRAME:AddMessage("LazyPig: Not Enough Money to Repair")
 				return
 			end
@@ -1133,15 +1135,15 @@ function LazyPig_GreySellRepair()
 		elseif GreySell.repair and	rcost == 0 then
 			local gold = floor(abs(GreySell.repair / 10000))
 			local silver = floor(abs(mod(GreySell.repair / 100, 100)))
-			local copper = floor(abs(mod(GreySell.repair, 100)))	
+			local copper = floor(abs(mod(GreySell.repair, 100)))
 			local COLOR_COPPER = "|cffeda55f"
 			local COLOR_SILVER = "|cffc7c7cf"
 			local COLOR_GOLD = "|cffffd700"
-			
+
 			DEFAULT_CHAT_FRAME:AddMessage("LazyPig: Repairing All Items "..COLOR_GOLD..gold.."g "..COLOR_SILVER..silver.."s "..COLOR_COPPER..copper.."c")
 			GreySell.repair = nil
 		end
-	end	
+	end
 end
 
 function LazyPig_ProcessQuests(...)
@@ -1158,11 +1160,11 @@ function LazyPig_PrepareQuestAutoPickup()
 	if IsAltKeyDown() then
 		GossipFrameCloseButton:Click();
 		ClearTarget();
-	end	
+	end
 end
 
 function LazyPig_SelectGossipActiveQuest(index, norecord)
-	if not ActiveQuest[index] then 
+	if not ActiveQuest[index] then
 		--DEFAULT_CHAT_FRAME:AddMessage("LazyPig_SelectGossipActiveQuest Error");
 	elseif not norecord then
 		LazyPig_RecordQuest(ActiveQuest[index])
@@ -1171,7 +1173,7 @@ function LazyPig_SelectGossipActiveQuest(index, norecord)
 end
 
 function LazyPig_SelectGossipAvailableQuest(index, norecord)
-	if not AvailableQuest[index] then 
+	if not AvailableQuest[index] then
 		--DEFAULT_CHAT_FRAME:AddMessage("LazyPig_SelectGossipAvailableQuest Error");
 	elseif not norecord then
 		LazyPig_RecordQuest(AvailableQuest[index])
@@ -1180,7 +1182,7 @@ function LazyPig_SelectGossipAvailableQuest(index, norecord)
 end
 
 function LazyPig_SelectActiveQuest(index, norecord)
-	if not ActiveQuest[index] then 
+	if not ActiveQuest[index] then
 		--DEFAULT_CHAT_FRAME:AddMessage("LazyPig_SelectActiveQuest Error");
 	elseif not norecord then
 		LazyPig_RecordQuest(ActiveQuest[index])
@@ -1189,7 +1191,7 @@ function LazyPig_SelectActiveQuest(index, norecord)
 end
 
 function LazyPig_SelectAvailableQuest(index, norecord)
-	if not AvailableQuest[index] then 
+	if not AvailableQuest[index] then
 		--DEFAULT_CHAT_FRAME:AddMessage("LazyPig_SelectAvailableQuest Error");
 	elseif not norecord then
 		LazyPig_RecordQuest(AvailableQuest[index])
@@ -1201,18 +1203,18 @@ function LazyPig_FixQuest(quest, annouce)
 	if not QuestRecord["details"] then
 		annouce = true
 	end
-	if UnitLevel("player") == 60 then	
+	if UnitLevel("player") == 60 then
 		if string.find(quest, "Fight for Warsong Gulch") then
 			QuestRecord["details"] = "Fight for Warsong Gulch 60"
 		elseif string.find(quest, "Battle of Warsong Gulch") then
-			QuestRecord["details"] = "Battle of Warsong Gulch 60"	
+			QuestRecord["details"] = "Battle of Warsong Gulch 60"
 		elseif string.find(quest, "Claiming Arathi Basin") then
-			QuestRecord["details"] = "Claiming Arathi Basin 60"	
+			QuestRecord["details"] = "Claiming Arathi Basin 60"
 		elseif string.find(quest, "Conquering Arathi Basin") then
 			QuestRecord["details"] = "Conquering Arathi Basin 60"
 		end
 	end
-	if QuestRecord["details"] and annouce then 
+	if QuestRecord["details"] and annouce then
 		UIErrorsFrame:Clear();
 		UIErrorsFrame:AddMessage("Recording: "..QuestRecord["details"])
 	end
@@ -1222,7 +1224,7 @@ function LazyPig_RecordQuest(qdetails)
 	if IsShiftKeyDown() and qdetails then
 		if QuestRecord["details"] ~= qdetails then
 			QuestRecord["details"] = qdetails
-		end	
+		end
 		LazyPig_FixQuest(QuestRecord["details"], true)
 	elseif not IsShiftKeyDown() and QuestRecord["details"] then
 		QuestRecord["details"] = nil
@@ -1236,7 +1238,7 @@ function LazyPig_ReplyQuest(event)
 			UIErrorsFrame:Clear();
 			UIErrorsFrame:AddMessage("Replaying: "..QuestRecord["details"])
 		end
-		
+
 		if event == "GOSSIP_SHOW" then
 			if QuestRecord["details"] then
 				for blockindex,blockmatch in pairs(ActiveQuest) do
@@ -1260,7 +1262,7 @@ function LazyPig_ReplyQuest(event)
 					QuestRecord["index"] = QuestRecord["index"] + 1
 					nr = nr - QuestRecord["index"]
 				end
-				LazyPig_SelectGossipActiveQuest(nr, true)	
+				LazyPig_SelectGossipActiveQuest(nr, true)
 			end
 		elseif event == "QUEST_GREETING" then
 			if QuestRecord["details"] then
@@ -1287,12 +1289,12 @@ function LazyPig_ReplyQuest(event)
 				end
 				LazyPig_SelectActiveQuest(nr, true)
 			end
-	
+
 		elseif event == "QUEST_PROGRESS" then
 			CompleteQuest()
 		elseif event == "QUEST_COMPLETE" and GetNumQuestChoices() == 0 then
 			GetQuestReward(0)
-		end	
+		end
 	end
 end
 
@@ -1307,12 +1309,12 @@ function LazyPig_Dismount()
 		LazyPig_Buff_Tooltip:SetPlayerBuff(index)
 		local desc = LazyPig_Buff_TooltipTextLeft2:GetText()
 		if desc then
-			local _, _, speed = string.find(desc, tooltipfind) 
+			local _, _, speed = string.find(desc, tooltipfind)
 			if speed or string.find(desc, expansionMounts) or string.find(desc, turtleMount) or string.find(desc, turtleMountv2) then
-			
+
 				CancelPlayerBuff(counter)
 				return
-			end	
+			end
 		end
 		counter = counter + 1
 	end
@@ -1347,7 +1349,7 @@ function LazyPig_ItemIsTradeable(bag, item)
 	LazyPig_Buff_Tooltip:SetBagItem(bag, item);
 
 	for i = 1, LazyPig_Buff_Tooltip:NumLines(), 1 do
-		local text = getglobal("LazyPig_Buff_TooltipTextLeft" .. i):GetText();	
+		local text = getglobal("LazyPig_Buff_TooltipTextLeft" .. i):GetText();
 		if ( text == ITEM_SOULBOUND ) then
 			return nil
 		elseif ( text == ITEM_BIND_QUEST ) then
@@ -1476,40 +1478,40 @@ end
 
 function LazyPig_WatchSplit(enable)
 	local returnval = timer_split
-	if LPCONFIG.SHIFTSPLIT then	
+	if LPCONFIG.SHIFTSPLIT then
 		local time = GetTime()
 		local txt_show = enable
 		local ctrl = IsControlKeyDown()
 		local alt = IsAltKeyDown()
 		local duration = 9
-	
+
 		if enable then
 			timer_split = time + duration
 		elseif timer_split then
 			local boost = -0.006*tmp_splitval + 1
-			
+
 			if auctionstatus then
 				if AuctionFrameBrowse:IsVisible() then
 					if not auctionbrowse then
 						auctionbrowse = true
 						LazyPig_EndSplit()
 						return
-					end	
+					end
 				else
 					auctionbrowse = nil
 				end
 			end
-			
+
 			if time > timer_split or auctionstatus and AuctionFrameAuctions and not (AuctionFrameAuctions:IsVisible() or AuctionFrameBrowse:IsVisible()) or mailstatus and SendMailFrame and not SendMailFrame:IsVisible() and (not CT_MailFrame or CT_MailFrame and not CT_MailFrame:IsVisible()) and (not GMailFrame or GMailFrame and not GMailFrame:IsVisible()) then
 				LazyPig_EndSplit()
 			elseif (ctrl or alt) and time > last_click then
-				local forcepass = (timer_split - duration + 0.6) > time 
+				local forcepass = (timer_split - duration + 0.6) > time
 				if ctrl and alt then
 					timer_split = time + duration - 1
-					return	
+					return
 				elseif alt and ((time + 0.1) > alttime or forcepass) and tmp_splitval < 100 then
 					alttime = time + 0.125
-					tmp_splitval = tmp_splitval + 1	
+					tmp_splitval = tmp_splitval + 1
 					timer_split = time + duration
 					last_click = 0.109*boost + time
 					txt_show = true
@@ -1520,7 +1522,7 @@ function LazyPig_WatchSplit(enable)
 					last_click = 0.109*boost + time
 					txt_show = true
 				end
-			end	
+			end
 		elseif auctionstatus and AuctionFrameAuctions and AuctionFrameAuctions:IsVisible() or mailstatus and SendMailFrame and SendMailFrame:IsVisible() or tradestatus or bankstatus or CT_MailFrame and CT_MailFrame:IsVisible() or GMailFrame and GMailFrame:IsVisible() then
 			timer_split = time + duration - 1
 			txt_show = true
@@ -1537,12 +1539,12 @@ function LazyPig_UseContainerItem(ParentID,ItemID)
 			if locked or not itemCount then return end
 			if not LazyPig_WatchSplit(true) then return end
 			last_click = GetTime()
-				
+
 			local ItemArray = {}
 			local name, id = LazyPig_DecodeItemLink(GetContainerItemLink(ParentID,ItemID))
 			local _, _, _, _, _, _, maxstack = GetItemInfo(id)
 			local out_slpit = tmp_splitval
-			
+
 			if out_slpit > maxstack then
 				out_slpit = maxstack
 			end
@@ -1551,7 +1553,7 @@ function LazyPig_UseContainerItem(ParentID,ItemID)
 			local dbag = nil
 			local dslot = nil
 			local cursoritem = nil
-			
+
 			if itemCount < out_slpit then
 				dbag, dslot = ParentID, ItemID
 				dcount = out_slpit - itemCount
@@ -1577,28 +1579,28 @@ function LazyPig_UseContainerItem(ParentID,ItemID)
 											if not (itemCount < out_slpit) and not dbag and not dslot and c < out_slpit then
 												dbag, dslot = b, s
 												dcount = out_slpit - c
-												--DEFAULT_CHAT_FRAME:AddMessage("b.." "..s.." count - "..c.." - "..scan mode2)	
+												--DEFAULT_CHAT_FRAME:AddMessage("b.." "..s.." count - "..c.." - "..scan mode2)
 											elseif c ~= out_slpit or cursoritem then
 												ItemArray[b.."_"..s] = c
-											end	
-										end	
+											end
+										end
 									end
 								end
-							end	
+							end
 						end
 					end
-				end	
-					
+				end
+
 				if not dbag or not dslot or CursorHasItem() then return end
-				
-				local escape = 0 
+
+				local escape = 0
 				while dcount > 0 do
 					local sbag = nil
 					local sslot = nil
 					local score = nil
 					local number = nil
 					local index = nil
-						
+
 					for blockindex,blockmatch in pairs(ItemArray) do
 						local x = nil
 						local y = nil
@@ -1610,7 +1612,7 @@ function LazyPig_UseContainerItem(ParentID,ItemID)
 						if not number or number > blockmatch or number == blockmatch and (x*10 + y) > score then
 							sbag = x
 							sslot = y
-							score = 10*sbag + sslot	
+							score = 10*sbag + sslot
 							number = blockmatch
 							index = blockindex
 						end
@@ -1627,23 +1629,23 @@ function LazyPig_UseContainerItem(ParentID,ItemID)
 						else
 							splitval = dcount
 						end
-							
+
 						dcount = dcount - splitval
 						ScheduleItemSplit(sbag, sslot, dbag, dslot, splitval)
 						ItemArray[index] = nil
-						--DEFAULT_CHAT_FRAME:AddMessage("Dest "..dbag.." - "..dslot.." From "..sbag.." - "..sslot.." - Count "..splitval)		
+						--DEFAULT_CHAT_FRAME:AddMessage("Dest "..dbag.." - "..dslot.." From "..sbag.." - "..sslot.." - Count "..splitval)
 					end
 
 					if escape > 99 then
-						--DEFAULT_CHAT_FRAME:AddMessage("LazPig_Split: Loop stop") 
-						return 
+						--DEFAULT_CHAT_FRAME:AddMessage("LazPig_Split: Loop stop")
+						return
 					else
 						escape = escape + 1
-					end	
+					end
 				end
 			end
 			return
-		
+
 		elseif LPCONFIG.RIGHT and tradestatus and not IsShiftKeyDown() and not IsAltKeyDown() and LazyPig_ItemIsTradeable(ParentID,ItemID) then
 			PickupContainerItem(ParentID,ItemID)
 			local slot = TradeFrame_GetAvailableSlot()
@@ -1652,7 +1654,7 @@ function LazyPig_UseContainerItem(ParentID,ItemID)
 				ClearCursor()
 			end
 			return
-			
+
 		elseif LPCONFIG.RIGHT and GMailFrame and GMailFrame:IsVisible() and not CursorHasItem() then
 			local i
 			local bag, item = ParentID,ItemID
@@ -1670,7 +1672,7 @@ function LazyPig_UseContainerItem(ParentID,ItemID)
 					return
 				end
 			end
-		
+
 		elseif LPCONFIG.RIGHT and CT_MailFrame and CT_MailFrame:IsVisible() and not IsShiftKeyDown() and not IsAltKeyDown() then
 			local bag, item = ParentID,ItemID
 			if ( ( CT_Mail_GetItemFrame(bag, item) or ( CT_Mail_addItem and CT_Mail_addItem[1] == bag and CT_Mail_addItem[2] == item ) ) and not special ) then
@@ -1704,7 +1706,7 @@ function LazyPig_UseContainerItem(ParentID,ItemID)
 				DEFAULT_CHAT_FRAME:AddMessage("LazyPig: Cannot attach item", 1, 0.5, 0);
 				return
 			end
-			
+
 			if InboxFrame and InboxFrame:IsVisible() then
 				MailFrameTab_OnClick(2);
 				return
@@ -1716,7 +1718,7 @@ function LazyPig_UseContainerItem(ParentID,ItemID)
 					ClearCursor()
 				end
 				return
-			end	
+			end
 
 		elseif LPCONFIG.RIGHT and auctionstatus and not IsShiftKeyDown() and not IsAltKeyDown() then
 			if not LazyPig_ItemIsTradeable(ParentID,ItemID) then
@@ -1733,54 +1735,54 @@ function LazyPig_UseContainerItem(ParentID,ItemID)
 				ClearCursor()
 			end
 			return
-		end	
+		end
 		OriginalUseContainerItem(ParentID,ItemID)
 end
 
 function ScheduleItemSplit(sbag, sslot, dbag, dslot, count)
 	if sbag and sslot and dbag and dslot and count then
-		
+
 		local number = nil
-		
+
 		for blockindex,blockmatch in pairs(ScheduleSplitCount) do
 			if not number or number < blockindex then
 				number = blockindex
 			end
 		end
-		
+
 		if not number then
 			number = 1
 		else
 			number = number + 1
 		end
-		
+
 		--DEFAULT_CHAT_FRAME:AddMessage("Task Count - "..number)
-		
+
 		ScheduleSplitCount[number] = true
 		ScheduleSplit.sbag[number] = sbag
 		ScheduleSplit.sslot[number] = sslot
 		ScheduleSplit.dbag[number] = dbag
 		ScheduleSplit.dslot[number] = dslot
 		ScheduleSplit.count[number] = count
-		
+
 		ScheduleSplit.active = true
-		
+
 	elseif ScheduleSplit.active then
-		
+
 		local number = nil
 		for blockindex,blockmatch in pairs(ScheduleSplitCount) do
 			if not number or number > blockindex then
 				number = blockindex
 			end
 		end
-		
+
 		if number then
 			last_click = GetTime()
 			local _, _, lock = GetContainerItemInfo(ScheduleSplit.dbag[number], ScheduleSplit.dslot[number])
 			if not lock then
-				
+
 				--DEFAULT_CHAT_FRAME:AddMessage("Dest "..ScheduleSplit.dbag[number].." - "..ScheduleSplit.dslot[number].." From "..ScheduleSplit.sbag[number].." - "..ScheduleSplit.sslot[number].." - Count "..ScheduleSplit.count[number])
-				
+
 				SplitContainerItem(ScheduleSplit.sbag[number], ScheduleSplit.sslot[number], ScheduleSplit.count[number])
 				PickupContainerItem(ScheduleSplit.dbag[number], ScheduleSplit.dslot[number])
 				ScheduleSplitCount[number] = nil
@@ -1797,7 +1799,7 @@ function LazyPig_CreateLink(name, count, rgb)
 		local color = rgb..name.."|r"
 		local hlink = "[|Hlazypig:"..count.."|h"..color.."|h]";
 		return hlink
-	end	
+	end
 end
 
 function LazyPig_SetItemRef_OnEvent(link, text, button)
@@ -1806,7 +1808,7 @@ function LazyPig_SetItemRef_OnEvent(link, text, button)
 		LazyPig_Command()
 	else
 		Original_SetItemRef(link, text, button)
-	end	
+	end
 end
 
 function LazyPig_RefreshNameplates()
@@ -1828,9 +1830,9 @@ function LazyPig_GetOption(num)
 	LazyPigMenuObjects[num] = this
 
 	if num == 00 and LPCONFIG.GREEN == 1
-	or num == 01 and LPCONFIG.GREEN == 2 
-	or num == 02 and LPCONFIG.GREEN == 0 
-	or num == 03 and LPCONFIG.ZG == 1		
+	or num == 01 and LPCONFIG.GREEN == 2
+	or num == 02 and LPCONFIG.GREEN == 0
+	or num == 03 and LPCONFIG.ZG == 1
 	or num == 04 and LPCONFIG.ZG == 2
 	or num == 05 and LPCONFIG.ZG == 0
 	or num == 06 and LPCONFIG.MC == 1
@@ -1862,14 +1864,14 @@ function LazyPig_GetOption(num)
 	or num == 33 and LPCONFIG.DINV
 	or num == 40 and LPCONFIG.FPLATE
 	or num == 41 and LPCONFIG.EPLATE
-	or num == 42 and LPCONFIG.HPLATE 
+	or num == 42 and LPCONFIG.HPLATE
 	or num == 50 and LPCONFIG.EBG
 	or num == 51 and LPCONFIG.LBG
 	or num == 52 and LPCONFIG.QBG
 	or num == 53 and LPCONFIG.RBG
 	or num == 54 and LPCONFIG.AQUE
 	or num == 55 and LPCONFIG.SBG
-	
+
 	or num == 60 and LPCONFIG.SALVA == 1
 	or num == 61 and LPCONFIG.SALVA == 2
 
@@ -1878,18 +1880,18 @@ function LazyPig_GetOption(num)
 	or num == 63 and LPCONFIG.ASPECT
 
 	or num == 90 and LPCONFIG.SUMM
-	
+
 	or num == 70 and LPCONFIG.SPAM
 	or num == 71 and LPCONFIG.SPAM_UNCOMMON
 	or num == 72 and LPCONFIG.SPAM_RARE
 	or num == 73 and LPCONFIG.SPAM_LOOT
-	
+
 	or num == 91 and LPCONFIG.LOOT
 	or num == 92 and LPCONFIG.RIGHT
 	or num == 93 and LPCONFIG.SHIFTSPLIT
 	or num == 94 and LPCONFIG.CAM
 	or num == 95 and LPCONFIG.SPECIALKEY
-	or num == 96 and LPCONFIG.DUEL		
+	or num == 96 and LPCONFIG.DUEL
 	or num == 97 and LPCONFIG.REZ
 	or num == 98 and LPCONFIG.GOSSIP
 	or num == 100 and LPCONFIG.DISMOUNT
@@ -1903,7 +1905,7 @@ function LazyPig_GetOption(num)
 	or num == 108 and LPCONFIG.ES_SHARDS == 1
 	or num == 109 and LPCONFIG.ES_SHARDS == 2
 	or num == 110 and LPCONFIG.ES_SHARDS == 0
-	
+
 	or nil then
 		this:SetChecked(true);
 	else
@@ -1914,12 +1916,12 @@ end
 
 function LazyPig_SetOption(num)
 	local checked = this:GetChecked()
-	if num == 00 then 
+	if num == 00 then
 		LPCONFIG.GREEN = 1
 		if not checked then LPCONFIG.GREEN = nil end
 		LazyPigMenuObjects[01]:SetChecked(nil)
 		LazyPigMenuObjects[02]:SetChecked(nil)
-	elseif num == 01 then 
+	elseif num == 01 then
 		LPCONFIG.GREEN = 2
 		if not checked then LPCONFIG.GREEN = nil end
 		LazyPigMenuObjects[00]:SetChecked(nil)
@@ -1934,7 +1936,7 @@ function LazyPig_SetOption(num)
 		if not checked then LPCONFIG.ZG = nil end
 		LazyPigMenuObjects[04]:SetChecked(nil)
 		LazyPigMenuObjects[05]:SetChecked(nil)
-	elseif num == 04 then 
+	elseif num == 04 then
 		LPCONFIG.ZG = 2
 		if not checked then LPCONFIG.ZG = nil end
 		LazyPigMenuObjects[03]:SetChecked(nil)
@@ -1949,7 +1951,7 @@ function LazyPig_SetOption(num)
 		if not checked then LPCONFIG.MC = nil end
 		LazyPigMenuObjects[07]:SetChecked(nil)
 		LazyPigMenuObjects[08]:SetChecked(nil)
-	elseif num == 07 then 
+	elseif num == 07 then
 		LPCONFIG.MC = 2
 		if not checked then LPCONFIG.MC = nil end
 		LazyPigMenuObjects[06]:SetChecked(nil)
@@ -1958,13 +1960,13 @@ function LazyPig_SetOption(num)
 		LPCONFIG.MC = 0
 		if not checked then LPCONFIG.MC = nil end
 		LazyPigMenuObjects[06]:SetChecked(nil)
-		LazyPigMenuObjects[07]:SetChecked(nil)	
+		LazyPigMenuObjects[07]:SetChecked(nil)
 	elseif num == 09 then
 		LPCONFIG.AQ = 1
 		if not checked then LPCONFIG.AQ = nil end
 		LazyPigMenuObjects[10]:SetChecked(nil)
 		LazyPigMenuObjects[11]:SetChecked(nil)
-	elseif num == 10 then 
+	elseif num == 10 then
 		LPCONFIG.AQ = 2
 		if not checked then LPCONFIG.AQ = nil end
 		LazyPigMenuObjects[09]:SetChecked(nil)
@@ -1973,13 +1975,13 @@ function LazyPig_SetOption(num)
 		LPCONFIG.AQ = 0
 		if not checked then LPCONFIG.AQ = nil end
 		LazyPigMenuObjects[09]:SetChecked(nil)
-		LazyPigMenuObjects[10]:SetChecked(nil)	
+		LazyPigMenuObjects[10]:SetChecked(nil)
 	elseif num == 12 then
 		LPCONFIG.AQMOUNT = 1
 		if not checked then LPCONFIG.AQMOUNT = nil end
 		LazyPigMenuObjects[13]:SetChecked(nil)
 		LazyPigMenuObjects[14]:SetChecked(nil)
-	elseif num == 13 then 
+	elseif num == 13 then
 		LPCONFIG.AQMOUNT = 2
 		if not checked then LPCONFIG.AQMOUNT = nil end
 		LazyPigMenuObjects[12]:SetChecked(nil)
@@ -1994,7 +1996,7 @@ function LazyPig_SetOption(num)
 		if not checked then LPCONFIG.SAND = nil end
 		LazyPigMenuObjects[16]:SetChecked(nil)
 		LazyPigMenuObjects[17]:SetChecked(nil)
-	elseif num == 16 then 
+	elseif num == 16 then
 		LPCONFIG.SAND = 2
 		if not checked then LPCONFIG.SAND = nil end
 		LazyPigMenuObjects[15]:SetChecked(nil)
@@ -2003,13 +2005,13 @@ function LazyPig_SetOption(num)
 		LPCONFIG.SAND = 0
 		if not checked then LPCONFIG.SAND = nil end
 		LazyPigMenuObjects[18]:SetChecked(nil)
-		LazyPigMenuObjects[19]:SetChecked(nil)	
+		LazyPigMenuObjects[19]:SetChecked(nil)
 	elseif num == 18 then
 		LPCONFIG.NAXX = 1
 		if not checked then LPCONFIG.NAXX = nil end
 		LazyPigMenuObjects[19]:SetChecked(nil)
 		LazyPigMenuObjects[20]:SetChecked(nil)
-	elseif num == 19 then 
+	elseif num == 19 then
 		LPCONFIG.NAXX = 2
 		if not checked then LPCONFIG.NAXX = nil end
 		LazyPigMenuObjects[18]:SetChecked(nil)
@@ -2018,44 +2020,44 @@ function LazyPig_SetOption(num)
 		LPCONFIG.NAXX = 0
 		if not checked then LPCONFIG.NAXX = nil end
 		LazyPigMenuObjects[18]:SetChecked(nil)
-		LazyPigMenuObjects[19]:SetChecked(nil)	
-	elseif num == 21 then 
+		LazyPigMenuObjects[19]:SetChecked(nil)
+	elseif num == 21 then
 		LPCONFIG.ROLLMSG = true
-		if not checked then LPCONFIG.ROLLMSG = nil end		
-	elseif num == 22 then															
+		if not checked then LPCONFIG.ROLLMSG = nil end
+	elseif num == 22 then
 		LPCONFIG.WORLDDUNGEON = true					--fixed
 		if not checked then LPCONFIG.WORLDDUNGEON = nil end
-		if LPCONFIG.WORLDDUNGEON or LPCONFIG.WORLDRAID or LPCONFIG.WORLDBG then 
+		if LPCONFIG.WORLDDUNGEON or LPCONFIG.WORLDRAID or LPCONFIG.WORLDBG then
 			LPCONFIG.WORLDUNCHECK = nil
 			LazyPigMenuObjects[25]:SetChecked(nil)
 		end
 		LazyPig_ZoneCheck()
-	elseif num == 23 then 
+	elseif num == 23 then
 		LPCONFIG.WORLDRAID = true
 		if not checked then LPCONFIG.WORLDRAID = nil end
-		if LPCONFIG.WORLDDUNGEON or LPCONFIG.WORLDRAID or LPCONFIG.WORLDBG then 
+		if LPCONFIG.WORLDDUNGEON or LPCONFIG.WORLDRAID or LPCONFIG.WORLDBG then
 			LPCONFIG.WORLDUNCHECK = nil
 			LazyPigMenuObjects[25]:SetChecked(nil)
 		end
 		LazyPig_ZoneCheck()
-	elseif num == 24 then 
+	elseif num == 24 then
 		LPCONFIG.WORLDBG = true
 		if not checked then LPCONFIG.WORLDBG = nil end
-		if LPCONFIG.WORLDDUNGEON or LPCONFIG.WORLDRAID or LPCONFIG.WORLDBG then 
+		if LPCONFIG.WORLDDUNGEON or LPCONFIG.WORLDRAID or LPCONFIG.WORLDBG then
 			LPCONFIG.WORLDUNCHECK = nil
 			LazyPigMenuObjects[25]:SetChecked(nil)
 		end
 		LazyPig_ZoneCheck()
-	elseif num == 25 then 
+	elseif num == 25 then
 		LPCONFIG.WORLDUNCHECK = true
-		if not checked then 
+		if not checked then
 			LPCONFIG.WORLDUNCHECK = nil
-		else	
+		else
 			LPCONFIG.WORLDDUNGEON = nil
 			LPCONFIG.WORLDRAID = nil
 			LPCONFIG.WORLDBG = nil
-										 
-										 
+
+
 			LazyPigMenuObjects[22]:SetChecked(nil)
 			LazyPigMenuObjects[23]:SetChecked(nil)
 			LazyPigMenuObjects[24]:SetChecked(nil)
@@ -2066,7 +2068,7 @@ function LazyPig_SetOption(num)
 		if not checked then LPCONFIG.BWL = nil end
 		LazyPigMenuObjects[27]:SetChecked(nil)
 		LazyPigMenuObjects[28]:SetChecked(nil)
-	elseif num == 27 then 
+	elseif num == 27 then
 		LPCONFIG.BWL = 2
 		if not checked then LPCONFIG.BWL = nil end
 		LazyPigMenuObjects[26]:SetChecked(nil)
@@ -2075,69 +2077,69 @@ function LazyPig_SetOption(num)
 		LPCONFIG.BWL = 0
 		if not checked then LPCONFIG.BWL = nil end
 		LazyPigMenuObjects[26]:SetChecked(nil)
-		LazyPigMenuObjects[27]:SetChecked(nil)	
+		LazyPigMenuObjects[27]:SetChecked(nil)
 	elseif num == 30 then 								--fixed
 		LPCONFIG.GINV = true
 		if not checked then LPCONFIG.GINV = nil end
-	elseif num == 31 then 
+	elseif num == 31 then
 		LPCONFIG.FINV = true
 		if not checked then LPCONFIG.FINV = nil end
-	elseif num == 32 then 
+	elseif num == 32 then
 		LPCONFIG.SINV = true
 		if not checked then LPCONFIG.SINV = nil end
-	elseif num == 33 then 
+	elseif num == 33 then
 		LPCONFIG.DINV = true
-		if not checked then LPCONFIG.DINV = nil end	
+		if not checked then LPCONFIG.DINV = nil end
 	elseif num == 40 then 								--fixed
 		LPCONFIG.FPLATE = true
 		if not checked then LPCONFIG.FPLATE = nil end
-		if LPCONFIG.EPLATE and LPCONFIG.FPLATE then 
-			LPCONFIG.HPLATE = nil 
+		if LPCONFIG.EPLATE and LPCONFIG.FPLATE then
+			LPCONFIG.HPLATE = nil
 			LazyPigMenuObjects[42]:SetChecked(nil)
 		end
 		LazyPig_RefreshNameplates()
-	elseif num == 41 then 
+	elseif num == 41 then
 		LPCONFIG.EPLATE = true
 		if not checked then LPCONFIG.EPLATE = nil end
-		if LPCONFIG.EPLATE and LPCONFIG.FPLATE then 
-			LPCONFIG.HPLATE = nil 
+		if LPCONFIG.EPLATE and LPCONFIG.FPLATE then
+			LPCONFIG.HPLATE = nil
 			LazyPigMenuObjects[42]:SetChecked(nil)
 		end
 		LazyPig_RefreshNameplates()
-	elseif num == 42 then 
+	elseif num == 42 then
 		LPCONFIG.HPLATE = true
-		if not checked then 
-			LPCONFIG.HPLATE = nil 
+		if not checked then
+			LPCONFIG.HPLATE = nil
 		end
-		if LPCONFIG.EPLATE and LPCONFIG.FPLATE then 
-			LPCONFIG.HPLATE = nil 
+		if LPCONFIG.EPLATE and LPCONFIG.FPLATE then
+			LPCONFIG.HPLATE = nil
 			LazyPigMenuObjects[42]:SetChecked(nil)
 		end
-		LazyPig_RefreshNameplates()	
+		LazyPig_RefreshNameplates()
 	elseif num == 50 then --fixed
 		LPCONFIG.EBG = true
 		if not checked then LPCONFIG.EBG = nil end
-	elseif num == 51 then 
+	elseif num == 51 then
 		LPCONFIG.LBG = true
 		if not checked then LPCONFIG.LBG = nil end
-	elseif num == 52 then 
+	elseif num == 52 then
 		LPCONFIG.QBG = true
 		if not checked then LPCONFIG.QBG = nil end
-	elseif num == 53 then 
+	elseif num == 53 then
 		LPCONFIG.RBG = true
 		if not checked then LPCONFIG.RBG = nil end
-	elseif num == 54 then 
+	elseif num == 54 then
 		LPCONFIG.AQUE = true
-		if not checked then LPCONFIG.AQUE = nil end		
+		if not checked then LPCONFIG.AQUE = nil end
 	elseif num == 55 then
 		LPCONFIG.SBG  = true
-		if not checked then LPCONFIG.SBG  = nil end	
+		if not checked then LPCONFIG.SBG  = nil end
 	elseif num == 60 then
 		LPCONFIG.SALVA = 1
 		if not checked then LPCONFIG.SALVA = nil end
 		LazyPigMenuObjects[61]:SetChecked(nil)
 		LazyPig_CheckSalvation()
-	elseif num == 61 then 
+	elseif num == 61 then
 		LPCONFIG.SALVA = 2
 		if not checked then LPCONFIG.SALVA = nil end
 		LazyPigMenuObjects[60]:SetChecked(nil)
@@ -2145,7 +2147,7 @@ function LazyPig_SetOption(num)
 	elseif num == 62 then
 		LPCONFIG.REMOVEMANABUFFS = 1
 		if not checked then LPCONFIG.REMOVEMANABUFFS = nil end
-		LazyPig_CheckManaBuffs()		
+		LazyPig_CheckManaBuffs()
 	elseif num == 63 then
 		LPCONFIG.ASPECT = true
 		if not checked then LPCONFIG.ASPECT = nil end
@@ -2153,23 +2155,23 @@ function LazyPig_SetOption(num)
 	elseif num == 70 then --fixed
 		LPCONFIG.SPAM = true
 		if not checked then LPCONFIG.SPAM = nil end
-	elseif num == 71 then 
+	elseif num == 71 then
 		LPCONFIG.SPAM_UNCOMMON = true
 		if not checked then LPCONFIG.SPAM_UNCOMMON = nil end
-	elseif num == 72 then 
+	elseif num == 72 then
 		LPCONFIG.SPAM_RARE	 = true
-		if not checked then LPCONFIG.SPAM_RARE	 = nil end	
-	elseif num == 73 then 
+		if not checked then LPCONFIG.SPAM_RARE	 = nil end
+	elseif num == 73 then
 		LPCONFIG.SPAM_LOOT	 = true
-		if not checked then LPCONFIG.SPAM_LOOT	 = nil end		
-		
+		if not checked then LPCONFIG.SPAM_LOOT	 = nil end
+
 	elseif num == 90 then
 		LPCONFIG.SUMM = true
-		if not checked then LPCONFIG.SUMM = nil end	
-	elseif num == 91 then 
+		if not checked then LPCONFIG.SUMM = nil end
+	elseif num == 91 then
 		LPCONFIG.LOOT = true
 		if not checked then LPCONFIG.LOOT = nil end
-	elseif num == 92 then 
+	elseif num == 92 then
 		LPCONFIG.RIGHT = true
 		if not checked then LPCONFIG.RIGHT = nil end
 		MailtoCheck(LPCONFIG.RIGHT)
@@ -2177,35 +2179,35 @@ function LazyPig_SetOption(num)
 		LPCONFIG.SHIFTSPLIT = true
 		if not checked then LPCONFIG.SHIFTSPLIT = nil end
 		MailtoCheck(LPCONFIG.SHIFTSPLIT)
-	elseif num == 94 then--fixed 
+	elseif num == 94 then--fixed
 		LPCONFIG.CAM = true
 		if not checked then LPCONFIG.CAM = nil end
-		if LPCONFIG.CAM then SetCVar("cameraDistanceMax",50) else SetCVar("cameraDistanceMaxFactor",1) SetCVar("cameraDistanceMax",15) end	
-	elseif num == 95 then 
+		if LPCONFIG.CAM then SetCVar("cameraDistanceMax",50) else SetCVar("cameraDistanceMaxFactor",1) SetCVar("cameraDistanceMax",15) end
+	elseif num == 95 then
 		LPCONFIG.SPECIALKEY = true
-		if not checked then LPCONFIG.SPECIALKEY = nil end	
+		if not checked then LPCONFIG.SPECIALKEY = nil end
 	elseif num == 96 then
 		LPCONFIG.DUEL = true
 		if not checked then LPCONFIG.DUEL = nil end
 		if LPCONFIG.DUEL then CancelDuel() end
 	elseif num == 97 then
 		LPCONFIG.REZ = true
-		if not checked then LPCONFIG.REZ = nil end	
+		if not checked then LPCONFIG.REZ = nil end
 	elseif num == 98 then
 		LPCONFIG.GOSSIP = true
 		if not checked then LPCONFIG.GOSSIP = nil end
 	elseif num == 100 then
 		LPCONFIG.DISMOUNT = true
-		if not checked then LPCONFIG.DISMOUNT = nil end	
+		if not checked then LPCONFIG.DISMOUNT = nil end
 	elseif num == 101 then
 		LPCONFIG.SPAM  = true
-		if not checked then LPCONFIG.SPAM  = nil end			
+		if not checked then LPCONFIG.SPAM  = nil end
 	elseif num == 102 then
 		LPCONFIG.WHITE_TAILORING = 1
 		if not checked then LPCONFIG.WHITE_TAILORING = nil end
 		LazyPigMenuObjects[103]:SetChecked(nil)
 		LazyPigMenuObjects[104]:SetChecked(nil)
-	elseif num == 103 then 
+	elseif num == 103 then
 		LPCONFIG.WHITE_TAILORING = 2
 		if not checked then LPCONFIG.WHITE_TAILORING = nil end
 		LazyPigMenuObjects[102]:SetChecked(nil)
@@ -2220,7 +2222,7 @@ function LazyPig_SetOption(num)
 		if not checked then LPCONFIG.FOOD_AND_DRINK = nil end
 		LazyPigMenuObjects[106]:SetChecked(nil)
 		LazyPigMenuObjects[107]:SetChecked(nil)
-	elseif num == 106 then 
+	elseif num == 106 then
 		LPCONFIG.FOOD_AND_DRINK = 2
 		if not checked then LPCONFIG.FOOD_AND_DRINK = nil end
 		LazyPigMenuObjects[105]:SetChecked(nil)
@@ -2229,13 +2231,13 @@ function LazyPig_SetOption(num)
 		LPCONFIG.FOOD_AND_DRINK = 0
 		if not checked then LPCONFIG.FOOD_AND_DRINK = nil end
 		LazyPigMenuObjects[105]:SetChecked(nil)
-		LazyPigMenuObjects[106]:SetChecked(nil)	
+		LazyPigMenuObjects[106]:SetChecked(nil)
 	elseif num == 108 then
 		LPCONFIG.ES_SHARDS = 1
 		if not checked then LPCONFIG.ES_SHARDS = nil end
 		LazyPigMenuObjects[109]:SetChecked(nil)
 		LazyPigMenuObjects[110]:SetChecked(nil)
-	elseif num == 109 then 
+	elseif num == 109 then
 		LPCONFIG.ES_SHARDS = 2
 		if not checked then LPCONFIG.ES_SHARDS = nil end
 		LazyPigMenuObjects[108]:SetChecked(nil)
@@ -2244,7 +2246,7 @@ function LazyPig_SetOption(num)
 		LPCONFIG.ES_SHARDS = 0
 		if not checked then LPCONFIG.ES_SHARDS = nil end
 		LazyPigMenuObjects[108]:SetChecked(nil)
-		LazyPigMenuObjects[109]:SetChecked(nil)	
+		LazyPigMenuObjects[109]:SetChecked(nil)
 	else
 		--DEFAULT_CHAT_FRAME:AddMessage("DEBUG: No num assigned - "..num)
 	end
@@ -2277,7 +2279,7 @@ function LazyPig_ZoneCheck2()
 	LazyPig_ZoneCheck()
 end
 
-local process = function(ChatFrame, name)  
+local process = function(ChatFrame, name)
     for index, value in ChatFrame.channelList do
         if (strupper(name) == strupper(value)) then
             return true
@@ -2288,12 +2290,12 @@ end
 
 function LazyPig_ZoneCheck()
 	local leavechat = LPCONFIG.WORLDRAID and LazyPig_Raid() or LPCONFIG.WORLDDUNGEON and LazyPig_Dungeon() or LPCONFIG.WORLDBG and LazyPig_BG() or LPCONFIG.WORLDUNCHECK
-	for i = 1, NUM_CHAT_WINDOWS do	
-		local ChatFrame = getglobal("ChatFrame"..i)	
+	for i = 1, NUM_CHAT_WINDOWS do
+		local ChatFrame = getglobal("ChatFrame"..i)
 		if ChatFrame:IsVisible() and not UnitIsDeadOrGhost("player") then
 			local id, name = GetChannelName("world")
-			if id > 0 then	
-				if leavechat then			
+			if id > 0 then
+				if leavechat then
 					if process(ChatFrame, name)  then
 						ChatFrame_RemoveChannel(ChatFrame, name)
 						channelstatus = true
@@ -2301,9 +2303,9 @@ function LazyPig_ZoneCheck()
 						UIErrorsFrame:AddMessage("Leaving World")
 					end
 					return
-				end	
-			end					
-			if (LPCONFIG.WORLDRAID or LPCONFIG.WORLDDUNGEON or LPCONFIG.WORLDBG) and not leavechat then						
+				end
+			end
+			if (LPCONFIG.WORLDRAID or LPCONFIG.WORLDDUNGEON or LPCONFIG.WORLDBG) and not leavechat then
 				local framename = ChatFrame:GetName()
 				if id == 0 then
 					UIErrorsFrame:Clear();
@@ -2316,10 +2318,10 @@ function LazyPig_ZoneCheck()
 						UIErrorsFrame:AddMessage("Joining World");
 						channelstatus = false
 					end
-				end	
+				end
 			end
 		end
-	end	
+	end
 end
 
 function LazyPig_PlayerClass(class, unit)
@@ -2467,7 +2469,7 @@ function LazyPig_ShowBindings(bind, fs, desc)
 		printout = "[" .. desc .. "]"
 	else
 		printout = "none"
-		fsl:SetTextColor(1,1,1,1) 
+		fsl:SetTextColor(1,1,1,1)
 	end
 	fsl:SetText(printout)
 end
@@ -2483,30 +2485,30 @@ function LazyPig_ChatFrame_OnEvent(event)
 		local check_rare = LPCONFIG.SPAM_RARE and string.find(arg1 ,"0070dd")
 		local check_loot = LPCONFIG.SPAM_LOOT and (string.find(arg1 ,"9d9d9d") or string.find(arg1 ,"ffffff") or string.find(arg1 ,"Your share of the loot"))
 		local check_money = LPCONFIG.SPAM_LOOT and string.find(arg1 ,"Your share of the loot")
-	
+
 		local check1 = string.find(arg1 ,"You")
 		local check2 = string.find(arg1 ,"won") or string.find(arg1 ,"receive")
 		local check3 = LPCONFIG.AQ and (idol or scarab)
 		local check4 = LPCONFIG.ZG and (bijou or coin)
-		local check5 = check1 and not check4 and not check3 and not green_roll or check2 
+		local check5 = check1 and not check4 and not check3 and not green_roll or check2
 
 		if not check5 and (check_uncommon or check_rare) or check_loot and not check1 or check_money then
 			return
-		end	
+		end
 	end
-	
+
 	if LPCONFIG.SPAM and arg2 and arg2 ~= GetUnitName("player") and (event == "CHAT_MSG_SAY" or event == "CHAT_MSG_CHANNEL" or event == "CHAT_MSG_YELL" or event == "CHAT_MSG_EMOTE" and not (IsGuildMate(arg2) or IsFriend(arg2))) then
 		local time = GetTime()
 		local index = ChatMessage["INDEX"]
-			
+
 		for blockindex,blockmatch in pairs(ChatMessage[index]) do
 			local findmatch1 = (blockmatch + 70) > time --70s delay
-			local findmatch2 = blockindex == arg1 
-			if findmatch1 and findmatch2 then 
+			local findmatch2 = blockindex == arg1
+			if findmatch1 and findmatch2 then
 				return
 			end
 		end
-		ChatMessage[index][arg1] = time		
+		ChatMessage[index][arg1] = time
 	end
 
     -- suppress BigWigs spam
@@ -2521,33 +2523,33 @@ function ChatSpamClean()
 	local time = GetTime()
 	local index = ChatMessage["INDEX"]
 	local newindex = nil
-		
+
 	if index == 1 then
 		newindex = 2
 	else
 		newindex = 1
 	end
-	
-	for blockindex,blockmatch in pairs(ChatMessage[index]) do	
+
+	for blockindex,blockmatch in pairs(ChatMessage[index]) do
 		if (blockmatch + 70) > time then
 			ChatMessage[newindex][blockindex] = ChatMessage[index][blockindex]
 		end
 	end
 	ChatMessage[index] = {}
 	ChatMessage["INDEX"] = newindex
-	
+
 	--DEFAULT_CHAT_FRAME:AddMessage("ChatSpamClean")
 end
 
 function LazyPig_Track_EFC(msg)
 	if msg then
 		msg = strlower(msg)
-		
+
 		local find0 = "captured "
 		local find1 = "The "..UnitFactionGroup("player").." Flag"
 		local find2 = " was picked up "
 		local find3 = " was dropped "
-		
+
 		if string.find(msg, strlower(find1..find2)) then
 			_, _, wsgefc = string.find(msg, strlower(find1..find2.."by (.+)%!"))
 			--DEFAULT_CHAT_FRAME:AddMessage("ADD EFC - "..wsgefc)
@@ -2561,16 +2563,16 @@ end
 function LazyPig_Target_EFC()
 	ClearTarget()
 	if wsgefc then
-		TargetByName(wsgefc, true) 
+		TargetByName(wsgefc, true)
 		UIErrorsFrame:Clear()
-		if not UnitExists("target") then 
-			UIErrorsFrame:AddMessage("OUT OF RANGE - EFC - "..strupper(wsgefc)) 
+		if not UnitExists("target") then
+			UIErrorsFrame:AddMessage("OUT OF RANGE - EFC - "..strupper(wsgefc))
 		elseif strlower(GetUnitName("target")) == wsgefc then
 			local class, classFileName = UnitClass("target")
 			local color = RAID_CLASS_COLORS[classFileName]
-			UIErrorsFrame:AddMessage(strupper(class.." - EFC - "..wsgefc), color.r, color.g, color.b) 
+			UIErrorsFrame:AddMessage(strupper(class.." - EFC - "..wsgefc), color.r, color.g, color.b)
 		end
-	end	
+	end
 end
 
 function LazyPig_Duel_EFC()
@@ -2588,10 +2590,10 @@ function LazyPig_Duel_EFC()
 		end
 		if duel_active or duel then
 			CancelDuel()
-		elseif UnitExists("target") and UnitIsFriend("target", "player") then 
-			StartDuel(GetUnitName("target")) 
+		elseif UnitExists("target") and UnitIsFriend("target", "player") then
+			StartDuel(GetUnitName("target"))
 		end
-	end	
+	end
 end
 
 function LazyPig_HasRighteousFury()

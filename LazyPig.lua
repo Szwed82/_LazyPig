@@ -637,7 +637,7 @@ function LazyPig_OnEvent(event)
 		local dsc = nil
 		local gossipnr = nil
 		local gossipbreak = nil
-		local processgossip = (IsShiftKeyDown() and not LPCONFIG.GOSSIP) or (LPCONFIG.GOSSIP and not IsShiftKeyDown())
+		local processgossip = LPCONFIG.GOSSIP and not IsShiftKeyDown()
 
 		dsc,GossipOptions[1],_,GossipOptions[2],_,GossipOptions[3],_,GossipOptions[4],_,GossipOptions[5] = GetGossipOptions()
 
@@ -1200,6 +1200,9 @@ function LazyPig_SelectAvailableQuest(index, norecord)
 end
 
 function LazyPig_FixQuest(quest, annouce)
+	if QuestHaste then
+		return
+	end
 	if not QuestRecord["details"] then
 		annouce = true
 	end
@@ -1221,6 +1224,9 @@ function LazyPig_FixQuest(quest, annouce)
 end
 
 function LazyPig_RecordQuest(qdetails)
+	if QuestHaste then
+		return
+	end
 	if IsShiftKeyDown() and qdetails then
 		if QuestRecord["details"] ~= qdetails then
 			QuestRecord["details"] = qdetails
@@ -1233,6 +1239,9 @@ function LazyPig_RecordQuest(qdetails)
 end
 
 function LazyPig_ReplyQuest(event)
+	if QuestHaste then
+		return
+	end
 	if IsShiftKeyDown() or IsAltKeyDown() then
 		if QuestRecord["details"] then
 			UIErrorsFrame:Clear();

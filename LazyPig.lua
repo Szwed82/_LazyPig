@@ -1370,92 +1370,19 @@ function LazyPig_ItemIsTradeable(bag, item)
 	return true
 end
 
-local function SetContains(set, key, value)
-    if not set then
-        return false
-    end
-    if not key and value then
-        for _, v in pairs(set) do
-            if v == value then
-                return true
-            end
-        end
-    end
-    if key and not value then
-        return set[key] ~= nil
-    end
-    return set[key] == value
-end
-
-local raids = {}
-raids["Molten Core"] = true
-raids["Blackwing Lair"] = true
-raids["Zul'Gurub"] = true
-raids["Ahn'Qiraj"] = true
-raids["Onyxia's Lair"] = true
-raids["Ruins of Ahn'Qiraj"] = true
-raids["Temple of Ahn'Qiraj"] = true
-raids["Naxxramas"] = true
-raids["The Upper Necropolis"] = true
-raids["Emerald Sanctum"] = true
-raids["Tower of Karazhan"] = true
-raids["???"] = true
-
-local dungeons = {}
-dungeons["Ragefire Chasm"] = true
-dungeons["Wailing Caverns"] = true
-dungeons["The Deadmines"] = true
-dungeons["Shadowfang Keep"] = true
-dungeons["Blackfathom Deeps"] = true
-dungeons["The Stockade"] = true
-dungeons["Gnomeregan"] = true
-dungeons["Razorfen Kraul"] = true
-dungeons["Scarlet Monastery"] = true
-dungeons["Razorfen Downs"] = true
-dungeons["Uldaman"] = true
-dungeons["Maraudon"] = true
-dungeons["Zul'Farrak"] = true
-dungeons["The Temple of Atal'Hakkar"] = true
-dungeons["Blackrock Depths"] = true
-dungeons["Blackrock Spire"] = true
-dungeons["Dire Maul"] = true
-dungeons["Scholomance"] = true
-dungeons["Stratholme"] = true
-dungeons["Crescent Grove"] = true
-dungeons["Gilneas City"] = true
-dungeons["Hateforge Quarry"] = true
-dungeons["The Black Morass"] = true
-dungeons["Karazhan Crypt"] = true
-
-local battlegrounds = {}
-battlegrounds["Arathi Basin"] = true
-battlegrounds["Warsong Gulch"] = true
-battlegrounds["Alterac Valley"] = true
-battlegrounds["Blood Ring"] = true
-battlegrounds["Sunnyglade Valley"] = true
-
 function LazyPig_Raid()
-	local zone = GetRealZoneText()
-	if SetContains(raids, zone) then
-		return true
-	end
-	return false
+	local inInstance, instanceType = IsInInstance()
+	return inInstance and instanceType == "raid"
 end
 
 function LazyPig_Dungeon()
-	local zone = GetRealZoneText()
-	if SetContains(dungeons, zone) then
-		return true
-	end
-	return false
+	local inInstance, instanceType = IsInInstance()
+	return inInstance and instanceType == "party"
 end
 
 function LazyPig_BG()
-	local zone = GetRealZoneText()
-	if SetContains(battlegrounds, zone) then
-		return true
-	end
-	return false
+	local inInstance, instanceType = IsInInstance()
+	return inInstance and instanceType == "pvp"
 end
 
 function LazyPig_Queue()

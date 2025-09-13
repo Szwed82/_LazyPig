@@ -62,6 +62,7 @@ local OriginalUseContainerItem = UseContainerItem;
 local Original_SetItemRef = SetItemRef;
 local Original_ChatFrame_OnEvent = ChatFrame_OnEvent;
 local Original_StaticPopup_OnShow = StaticPopup_OnShow;
+local Original_QuestRewardItem_OnClick = QuestRewardItem_OnClick
 
 local roster_task_refresh = 0
 local last_click = 0
@@ -207,6 +208,7 @@ function LazyPig_OnLoad()
 	SetItemRef = LazyPig_SetItemRef_OnEvent;
 	ChatFrame_OnEvent = LazyPig_ChatFrame_OnEvent;
 	StaticPopup_OnShow = LazyPig_StaticPopup_OnShow;
+	QuestRewardItem_OnClick = LazyPig_QuestRewardItem_OnClick
 
 	SLASH_LAZYPIG1 = "/lp";
 	SLASH_LAZYPIG2 = "/lazypig";
@@ -1234,8 +1236,22 @@ function LazyPig_RecordQuest(qdetails)
 		LazyPig_FixQuest(QuestRecord["details"], true)
 	elseif not IsShiftKeyDown() and QuestRecord["details"] then
 		QuestRecord["details"] = nil
+		QuestRecord.itemChoice = nil
 	end
 	QuestRecord["progress"] = true
+end
+
+function LazyPig_QuestRewardItem_OnClick()
+	if QuestRecord.details then
+		if ( this.type == "choice" ) then
+			QuestRewardItemHighlight:SetPoint("TOPLEFT", this, "TOPLEFT", -8, 7);
+			QuestRewardItemHighlight:Show();
+			QuestFrameRewardPanel.itemChoice = this:GetID();
+			QuestRecord.itemChoice = this:GetID();
+		end
+	else
+		Original_QuestRewardItem_OnClick()
+	end
 end
 
 function LazyPig_ReplyQuest(event)
@@ -1301,8 +1317,12 @@ function LazyPig_ReplyQuest(event)
 
 		elseif event == "QUEST_PROGRESS" then
 			CompleteQuest()
-		elseif event == "QUEST_COMPLETE" and GetNumQuestChoices() == 0 then
-			GetQuestReward(0)
+		elseif event == "QUEST_COMPLETE" then
+			if GetNumQuestChoices() == 0 then
+				GetQuestReward(0)
+			elseif GetNumQuestChoices() > 0 and QuestRecord.itemChoice then
+				GetQuestReward(QuestRecord.itemChoice)
+			end
 		end
 	end
 end

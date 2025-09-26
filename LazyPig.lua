@@ -1242,15 +1242,12 @@ function LazyPig_RecordQuest(qdetails)
 end
 
 function LazyPig_QuestRewardItem_OnClick()
-	if QuestRecord.details then
-		if ( this.type == "choice" ) then
-			QuestRewardItemHighlight:SetPoint("TOPLEFT", this, "TOPLEFT", -8, 7);
-			QuestRewardItemHighlight:Show();
-			QuestFrameRewardPanel.itemChoice = this:GetID();
-			QuestRecord.itemChoice = this:GetID();
-		end
-	else
-		Original_QuestRewardItem_OnClick()
+	Original_QuestRewardItem_OnClick()
+	if QuestRecord.details and this.type == "choice" then
+		QuestRewardItemHighlight:SetPoint("TOPLEFT", this, "TOPLEFT", -8, 7);
+		QuestRewardItemHighlight:Show();
+		QuestFrameRewardPanel.itemChoice = this:GetID();
+		QuestRecord.itemChoice = this:GetID();
 	end
 end
 

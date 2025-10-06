@@ -38,7 +38,7 @@ LPCONFIG.WORLDUNCHECK = nil
 LPCONFIG.SPAM = false
 LPCONFIG.SPAM_UNCOMMON = false
 LPCONFIG.SPAM_RARE = false
-LPCONFIG.SHIFTSPLIT = true
+LPCONFIG.SHIFTSPLIT = false
 LPCONFIG.REZ = true
 LPCONFIG.GOSSIP = true
 LPCONFIG.SALVA = false
@@ -346,13 +346,13 @@ function LazyPig_OnUpdate()
 		end
 	end
 
-	if merchantstatus and shiftstatus and current_time > last_click and not CursorHasItem() then
+	if merchantstatus and ctrlstatus and current_time > last_click and not CursorHasItem() then
 		last_click = current_time + 0.25
 		LazyPig_GreySellRepair();
 	end
 
 	if not QuestHaste then
-		if shiftstatus or altstatus then
+		if ctrlstatus then
 			if QuestFrameDetailPanel:IsVisible() then
 				AcceptQuest();
 			end
@@ -1229,12 +1229,12 @@ function LazyPig_RecordQuest(qdetails)
 	if QuestHaste then
 		return
 	end
-	if IsShiftKeyDown() and qdetails then
+	if IsControlKeyDown() and qdetails then
 		if QuestRecord["details"] ~= qdetails then
 			QuestRecord["details"] = qdetails
 		end
 		LazyPig_FixQuest(QuestRecord["details"], true)
-	elseif not IsShiftKeyDown() and QuestRecord["details"] then
+	elseif not IsControlKeyDown() and QuestRecord["details"] then
 		QuestRecord["details"] = nil
 		QuestRecord.itemChoice = nil
 	end
@@ -1255,7 +1255,7 @@ function LazyPig_ReplyQuest(event)
 	if QuestHaste then
 		return
 	end
-	if IsShiftKeyDown() or IsAltKeyDown() then
+	if IsControlKeyDown() then
 		if QuestRecord["details"] then
 			UIErrorsFrame:Clear();
 			UIErrorsFrame:AddMessage("Replaying: "..QuestRecord["details"])

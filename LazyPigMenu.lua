@@ -100,7 +100,7 @@ local CheckBoxTables = {
 		[2] = { "LazyPigCheckbox61", "Warrior Shield/Druid Bear/Paladin RF" },
 	},
 
-	["Mana Buff Remover (Spirit, Int, Wis)"] = {
+	["Mana Buff Remover"] = {
 		[0] = "LazyPigCheckBoxGroupManaBuffRemover",
 		[1] = {"LazyPigCheckbox62","Always"}
 	},
@@ -210,21 +210,21 @@ function LazyPig_CreateOptionsFrame()
 	-- Option Frame
 	local frame = CreateFrame("Frame", "LazyPigOptionsFrame")
 	tinsert(UISpecialFrames,"LazyPigOptionsFrame")
-	frame:SetScale(.81)
+	-- frame:SetScale(.81)
 	frame:SetFrameStrata("DIALOG")
 	frame:SetWidth(630)
 	frame:SetHeight(643)
 	
 	frame:SetPoint("TOPLEFT", nil, "TOPLEFT", 250, -50)
 	frame:SetBackdrop( {
-			bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background", 
+			bgFile = "Interface\\Buttons\\WHITE8x8", 
 			edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border", 
 			tile = true, 
 			tileSize = 32, 
 			edgeSize = 32, 
 			insets = { left = 11, right = 12, top = 12, bottom = 11 }
 		} );
-	frame:SetBackdropColor(.01, .01, .01, .91)
+	frame:SetBackdropColor(0, 0, 0, .8)
 
 	frame:SetMovable(true)
 	frame:EnableMouse(true)
@@ -354,7 +354,7 @@ function LazyPig_CreateOptionsFrame()
 	local str = "Chat Filter"
 	frame.cbgroup_chatfilter = CheckBoxGroup(frame, 450, -125, str, CheckBoxTables[str])
 
-	local str = "Mana Buff Remover (Spirit, Int, Wis)"
+	local str = "Mana Buff Remover"
 	frame.cbgroup_manabuffremover = CheckBoxGroup(frame,450,-220,str,CheckBoxTables[str])
 
 	local str = "Aspect of the Wolf"

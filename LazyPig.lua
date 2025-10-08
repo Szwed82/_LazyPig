@@ -346,17 +346,17 @@ function LazyPig_OnUpdate()
 		end
 	end
 
-	if merchantstatus and ctrlstatus and current_time > last_click and not CursorHasItem() then
+	if merchantstatus and altstatus and current_time > last_click and not CursorHasItem() then
 		last_click = current_time + 0.25
 		LazyPig_GreySellRepair();
 	end
 
 	if not QuestHaste then
-		if ctrlstatus then
+		if altstatus then
 			if QuestFrameDetailPanel:IsVisible() then
 				AcceptQuest();
 			end
-		elseif QuestRecord["details"] and not shiftstatus then
+		elseif QuestRecord["details"] and not altstatus then
 			LazyPig_RecordQuest();
 		end
 	end
@@ -1229,12 +1229,12 @@ function LazyPig_RecordQuest(qdetails)
 	if QuestHaste then
 		return
 	end
-	if IsControlKeyDown() and qdetails then
+	if IsAltKeyDown() and qdetails then
 		if QuestRecord["details"] ~= qdetails then
 			QuestRecord["details"] = qdetails
 		end
 		LazyPig_FixQuest(QuestRecord["details"], true)
-	elseif not IsControlKeyDown() and QuestRecord["details"] then
+	elseif not IsAltKeyDown() and QuestRecord["details"] then
 		QuestRecord["details"] = nil
 		QuestRecord.itemChoice = nil
 	end
@@ -1252,81 +1252,80 @@ function LazyPig_QuestRewardItem_OnClick()
 end
 
 function LazyPig_ReplyQuest(event)
-	if QuestHaste then
+	if QuestHaste or not IsAltKeyDown() then
 		return
 	end
-	if IsControlKeyDown() then
+
+	if QuestRecord["details"] then
+		UIErrorsFrame:Clear();
+		UIErrorsFrame:AddMessage("Replaying: "..QuestRecord["details"])
+	end
+
+	if event == "GOSSIP_SHOW" then
 		if QuestRecord["details"] then
-			UIErrorsFrame:Clear();
-			UIErrorsFrame:AddMessage("Replaying: "..QuestRecord["details"])
+			for blockindex,blockmatch in pairs(ActiveQuest) do
+				if blockmatch == QuestRecord["details"] then
+					Original_SelectGossipActiveQuest(blockindex)
+					return
+				end
+			end
+			for blockindex,blockmatch in pairs(AvailableQuest) do
+				if blockmatch == QuestRecord["details"] then
+					Original_SelectGossipAvailableQuest(blockindex)
+					return
+				end
+			end
+		elseif table.getn(ActiveQuest) == 0 and table.getn(AvailableQuest) == 1 or IsAltKeyDown() and table.getn(AvailableQuest) > 0 then
+			LazyPig_SelectGossipAvailableQuest(1, true)
+		elseif table.getn(ActiveQuest) == 1 and table.getn(AvailableQuest) == 0 or IsAltKeyDown() and table.getn(ActiveQuest) > 0 then
+			local nr = table.getn(ActiveQuest)
+			if QuestRecord["progress"] and (nr - QuestRecord["index"]) > 0 then
+				--DEFAULT_CHAT_FRAME:AddMessage("++quest dec nr - "..nr.." index - "..QuestRecord["index"])
+				QuestRecord["index"] = QuestRecord["index"] + 1
+				nr = nr - QuestRecord["index"]
+			end
+			LazyPig_SelectGossipActiveQuest(nr, true)
+		end
+	elseif event == "QUEST_GREETING" then
+		if QuestRecord["details"] then
+			for blockindex,blockmatch in pairs(ActiveQuest) do
+				if blockmatch == QuestRecord["details"] then
+					Original_SelectActiveQuest(blockindex)
+					return
+				end
+			end
+			for blockindex,blockmatch in pairs(AvailableQuest) do
+				if blockmatch == QuestRecord["details"] then
+					Original_SelectAvailableQuest(blockindex)
+					return
+				end
+			end
+		elseif table.getn(ActiveQuest) == 0 and table.getn(AvailableQuest) == 1 or IsAltKeyDown() and table.getn(AvailableQuest) > 0 then
+			LazyPig_SelectAvailableQuest(1, true)
+		elseif table.getn(ActiveQuest) == 1 and table.getn(AvailableQuest) == 0 or IsAltKeyDown() and table.getn(ActiveQuest) > 0 then
+			local nr = table.getn(ActiveQuest)
+			if QuestRecord["progress"] and (nr - QuestRecord["index"]) > 0 then
+				--DEFAULT_CHAT_FRAME:AddMessage("--quest dec nr - "..nr.." index - "..QuestRecord["index"])
+				QuestRecord["index"] = QuestRecord["index"] + 1
+				nr = nr - QuestRecord["index"]
+			end
+			LazyPig_SelectActiveQuest(nr, true)
 		end
 
-		if event == "GOSSIP_SHOW" then
-			if QuestRecord["details"] then
-				for blockindex,blockmatch in pairs(ActiveQuest) do
-					if blockmatch == QuestRecord["details"] then
-						Original_SelectGossipActiveQuest(blockindex)
-						return
-					end
-				end
-				for blockindex,blockmatch in pairs(AvailableQuest) do
-					if blockmatch == QuestRecord["details"] then
-						Original_SelectGossipAvailableQuest(blockindex)
-						return
-					end
-				end
-			elseif table.getn(ActiveQuest) == 0 and table.getn(AvailableQuest) == 1 or IsAltKeyDown() and table.getn(AvailableQuest) > 0 then
-				LazyPig_SelectGossipAvailableQuest(1, true)
-			elseif table.getn(ActiveQuest) == 1 and table.getn(AvailableQuest) == 0 or IsAltKeyDown() and table.getn(ActiveQuest) > 0 then
-				local nr = table.getn(ActiveQuest)
-				if QuestRecord["progress"] and (nr - QuestRecord["index"]) > 0 then
-					--DEFAULT_CHAT_FRAME:AddMessage("++quest dec nr - "..nr.." index - "..QuestRecord["index"])
-					QuestRecord["index"] = QuestRecord["index"] + 1
-					nr = nr - QuestRecord["index"]
-				end
-				LazyPig_SelectGossipActiveQuest(nr, true)
-			end
-		elseif event == "QUEST_GREETING" then
-			if QuestRecord["details"] then
-				for blockindex,blockmatch in pairs(ActiveQuest) do
-					if blockmatch == QuestRecord["details"] then
-						Original_SelectActiveQuest(blockindex)
-						return
-					end
-				end
-				for blockindex,blockmatch in pairs(AvailableQuest) do
-					if blockmatch == QuestRecord["details"] then
-						Original_SelectAvailableQuest(blockindex)
-						return
-					end
-				end
-			elseif table.getn(ActiveQuest) == 0 and table.getn(AvailableQuest) == 1 or IsAltKeyDown() and table.getn(AvailableQuest) > 0 then
-				LazyPig_SelectAvailableQuest(1, true)
-			elseif table.getn(ActiveQuest) == 1 and table.getn(AvailableQuest) == 0 or IsAltKeyDown() and table.getn(ActiveQuest) > 0 then
-				local nr = table.getn(ActiveQuest)
-				if QuestRecord["progress"] and (nr - QuestRecord["index"]) > 0 then
-					--DEFAULT_CHAT_FRAME:AddMessage("--quest dec nr - "..nr.." index - "..QuestRecord["index"])
-					QuestRecord["index"] = QuestRecord["index"] + 1
-					nr = nr - QuestRecord["index"]
-				end
-				LazyPig_SelectActiveQuest(nr, true)
-			end
-
-		elseif event == "QUEST_PROGRESS" then
-			CompleteQuest()
-		elseif event == "QUEST_COMPLETE" then
-			if GetNumQuestChoices() == 0 then
-				GetQuestReward(0)
-			elseif GetNumQuestChoices() > 0 and QuestRecord.itemChoice then
-				GetQuestReward(QuestRecord.itemChoice)
-			end
+	elseif event == "QUEST_PROGRESS" then
+		CompleteQuest()
+	elseif event == "QUEST_COMPLETE" then
+		if GetNumQuestChoices() == 0 then
+			GetQuestReward(0)
+		elseif GetNumQuestChoices() > 0 and QuestRecord.itemChoice then
+			GetQuestReward(QuestRecord.itemChoice)
 		end
 	end
 end
 
 function LazyPig_Dismount()
 	local counter = 0
-	local tooltipfind = "Increases speed by (.+)%%"
+	local tooltipfind = "Increases speed by .+%%"
 	local expansionMounts = "speed based on"
 	local turtleMount = "Slow and steady..."
 	local turtleMountv2 = "Riding"
@@ -1335,8 +1334,10 @@ function LazyPig_Dismount()
 		LazyPig_Buff_Tooltip:SetPlayerBuff(index)
 		local desc = LazyPig_Buff_TooltipTextLeft2:GetText()
 		if desc then
-			local _, _, speed = string.find(desc, tooltipfind)
-			if speed or string.find(desc, expansionMounts) or string.find(desc, turtleMount) or string.find(desc, turtleMountv2) then
+			if string.find(desc, tooltipfind)
+				or string.find(desc, expansionMounts)
+				or string.find(desc, turtleMount)
+				or string.find(desc, turtleMountv2) then
 
 				CancelPlayerBuff(counter)
 				return

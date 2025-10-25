@@ -382,7 +382,6 @@ function LazyPig_OnUpdate()
 	end
 
 	LazyPig_CheckSalvation();
-	LazyPig_CheckManaBuffs();
 	ScheduleButtonClick();
 	ScheduleFunctionLaunch();
 	ScheduleItemSplit();
@@ -452,7 +451,6 @@ function LazyPig_OnEvent(event)
 		this:RegisterEvent("QUEST_PROGRESS")
 		this:RegisterEvent("QUEST_COMPLETE")
 		this:RegisterEvent("START_LOOT_ROLL")
-		this:RegisterEvent("DUEL_REQUESTED")
 		this:RegisterEvent("MERCHANT_SHOW")
 		this:RegisterEvent("MERCHANT_CLOSED")
 		this:RegisterEvent("TRADE_SHOW")
@@ -467,15 +465,11 @@ function LazyPig_OnEvent(event)
 		this:RegisterEvent("PLAYER_UNGHOST")
 		this:RegisterEvent("PLAYER_DEAD")
 		this:RegisterEvent("PLAYER_AURAS_CHANGED")
-		this:RegisterEvent("UPDATE_BONUS_ACTIONBAR")
-		this:RegisterEvent("UNIT_INVENTORY_CHANGED")
-		this:RegisterEvent("UI_INFO_MESSAGE")
 
 		LazyPigOptionsFrame = LazyPig_CreateOptionsFrame()
 		LazyPigKeybindsFrame = LazyPig_CreateKeybindsFrame()
 
 		LazyPig_CheckSalvation();
-		LazyPig_CheckManaBuffs();
 		Check_Bg_Status();
 		LazyPig_AutoLeaveBG();
 		LazyPig_AutoSummon();
@@ -492,18 +486,8 @@ function LazyPig_OnEvent(event)
 		--SendChatMessage(".xp 8", "SAY") --qgaming version
 		--SendChatMessage(".exp 5", "SAY") --scriptcraft version
 
-	elseif (LPCONFIG.SALVA and (event == "PLAYER_AURAS_CHANGED" or event == "UPDATE_BONUS_ACTIONBAR" and LazyPig_PlayerClass("Druid", "player") or event == "UNIT_INVENTORY_CHANGED")) then
+	elseif (LPCONFIG.SALVA and event == "PLAYER_AURAS_CHANGED") then
 		LazyPig_CheckSalvation()
-	elseif (LPCONFIG.REMOVEMANABUFFS and (event == "PLAYER_AURAS_CHANGED" or event == "UPDATE_BONUS_ACTIONBAR" and LazyPig_PlayerClass("Druid", "player") or event == "UNIT_INVENTORY_CHANGED"))then
-		LazyPig_CheckManaBuffs()
-
-	elseif(event == "DUEL_REQUESTED") then
-		duel_active = true
-		if LPCONFIG.DUEL and not IsShiftKeyDown() then --dnd_active and
-			duel_active = nil
-			CancelDuel()
-			UIErrorsFrame:AddMessage(arg1.." - Duel Cancelled")
-		end
 
 	elseif(event == "PLAYER_DEAD") then
 		if LPCONFIG.RBG and LazyPig_BG() then
@@ -583,10 +567,6 @@ function LazyPig_OnEvent(event)
 		if(string.find(arg1, "Can't use that in this Aspect.")) then
 			LazyPig_CancelAspect()
 		end
-	elseif (event == "UI_INFO_MESSAGE") then
-		if string.find(arg1 ,"Duel cancelled") then
-			duel_active = nil
-		end
 	elseif (event == "CHAT_MSG_SYSTEM") then
 		if arg1 == CLEARED_DND or arg1 == CLEARED_AFK then
 			dnd_active = false
@@ -596,7 +576,6 @@ function LazyPig_OnEvent(event)
 		elseif(string.find(arg1, string.sub(MARKED_DND, 1, string.len(MARKED_DND) -3))) then
 			afk_active = false
 			dnd_active = true
-			--if LPCONFIG.DUEL then CancelDuel() UIErrorsFrame:AddMessage("Duel Decline Atctive - DND") end
 
 		elseif(string.find(arg1, string.sub(MARKED_AFK, 1, string.len(MARKED_AFK) -2))) then
 			afk_active = true
@@ -613,10 +592,6 @@ function LazyPig_OnEvent(event)
 			LazyPig_FixQuest(arg1)
 			QuestRecord["progress"] = nil
 
-		elseif string.find(arg1 ,"Duel starting:") or string.find(arg1 ,"requested a duel") then
-			duel_active = true
-		elseif string.find(arg1 ,"in a duel") then
-			duel_active = nil
 		end
 
 	elseif(event == "QUEST_GREETING") then
@@ -2101,7 +2076,6 @@ function LazyPig_SetOption(num)
 	elseif num == 62 then
 		LPCONFIG.REMOVEMANABUFFS = 1
 		if not checked then LPCONFIG.REMOVEMANABUFFS = nil end
-		LazyPig_CheckManaBuffs()
 	elseif num == 63 then
 		LPCONFIG.ASPECT = true
 		if not checked then LPCONFIG.ASPECT = nil end
@@ -2143,7 +2117,6 @@ function LazyPig_SetOption(num)
 	elseif num == 96 then
 		LPCONFIG.DUEL = true
 		if not checked then LPCONFIG.DUEL = nil end
-		if LPCONFIG.DUEL then CancelDuel() end
 	elseif num == 97 then
 		LPCONFIG.REZ = true
 		if not checked then LPCONFIG.REZ = nil end
@@ -2291,31 +2264,6 @@ function LazyPig_PlayerClass(class, unit)
 	return false
 end
 
-function LazyPig_IsBearForm()
-	for i = 1 , GetNumShapeshiftForms() do
-		local _, name, isActive = GetShapeshiftFormInfo(i);
-		if(isActive and LazyPig_PlayerClass("Druid", "player") and (name == "Bear Form" or name == "Dire Bear Form")) then
-			return true
-		end
-	end
-	return false
-end
-
-function LazyPig_IsShieldEquipped()
-	local slot = GetInventorySlotInfo("SecondaryHandSlot")
-	local link = GetInventoryItemLink("player", slot)
-	if link  then
-		local found, _, id, name = string.find(link, "item:(%d+):.*%[(.*)%]")
-		if found and id then
-			local _,_,_,_,_,itemType = GetItemInfo(tonumber(id))
-			if(itemType == "Shields") then
-				return true
-			end
-		end
-	end
-	return false
-end
-
 function LazyPig_CancelShapeshiftBuff()
 	local i;
 	local max = GetNumShapeshiftForms();
@@ -2356,7 +2304,7 @@ end
 
 local salvationbuffs = {"Spell_Holy_SealOfSalvation", "Spell_Holy_GreaterBlessingofSalvation"}
 function LazyPig_CheckSalvation()
-	if(LPCONFIG.SALVA == 1 or (LPCONFIG.SALVA == 2 and (LazyPig_IsShieldEquipped() and LazyPig_PlayerClass("Warrior", "player") or LazyPig_IsBearForm() or LazyPig_HasRighteousFury()))) then
+	if(LPCONFIG.SALVA == 1 or (LPCONFIG.SALVA == 2 and LazyPig_HasRighteousFury())) then
 		local counter = 0
 		while GetPlayerBuff(counter) >= 0 do
 			local index, untilCancelled = GetPlayerBuff(counter)
@@ -2369,33 +2317,6 @@ function LazyPig_CheckSalvation()
 							CancelPlayerBuff(index);
 							UIErrorsFrame:Clear();
 							UIErrorsFrame:AddMessage("Salvation Removed");
-							return
-						end
-						i = i + 1
-					end
-				end
-			end
-			counter = counter + 1
-		end
-		return nil
-	end
-end
-
-local manabuffs = {"Spell_Holy_SealOfWisdom", "Spell_Holy_GreaterBlessingofWisdom","Spell_Holy_ArcaneIntellect","Spell_Holy_MagicalSentry","Spell_Holy_PrayerofSpirit","Spell_Holy_DivineSpirit"}
-function LazyPig_CheckManaBuffs()
-	if(LPCONFIG.REMOVEMANABUFFS == 1) then
-		local counter = 0
-		while GetPlayerBuff(counter) >= 0 do
-			local index, untilCancelled = GetPlayerBuff(counter)
-			if untilCancelled ~= 1 then
-				local texture = GetPlayerBuffTexture(index)
-				if texture then  -- Check if texture is not nil
-					local i = 1
-					while manabuffs[i] do
-						if string.find(texture, manabuffs[i]) then
-							CancelPlayerBuff(index);
-							UIErrorsFrame:Clear();
-							UIErrorsFrame:AddMessage("Intellect or Wisdom or Spirit Removed");
 							return
 						end
 						i = i + 1
@@ -2525,27 +2446,6 @@ function LazyPig_Target_EFC()
 			local class, classFileName = UnitClass("target")
 			local color = RAID_CLASS_COLORS[classFileName]
 			UIErrorsFrame:AddMessage(strupper(class.." - EFC - "..wsgefc), color.r, color.g, color.b)
-		end
-	end
-end
-
-function LazyPig_Duel_EFC()
-	if GetRealZoneText() == "Warsong Gulch" then
-		LazyPig_Target_EFC()
-	else
-		local duel = nil
-		for i=1,STATICPOPUP_NUMDIALOGS do
-			local frame = getglobal("StaticPopup"..i)
-			if frame:IsShown() then
-				if frame.which == "DUEL_REQUESTED" then
-					duel = true
-				end
-			end
-		end
-		if duel_active or duel then
-			CancelDuel()
-		elseif UnitExists("target") and UnitIsFriend("target", "player") then
-			StartDuel(GetUnitName("target"))
 		end
 	end
 end

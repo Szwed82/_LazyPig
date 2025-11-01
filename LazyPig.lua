@@ -256,100 +256,12 @@ function LazyPig_OnUpdate()
 		altshifttime = 0
 	end
 
-	if shift_time == current_time  then
-		if not (UnitExists("target") and UnitIsUnit("player", "target")) then
-			--
-		elseif not battleframe then
-			battleframe = current_time
-		elseif (current_time - battleframe) > 3 then
-			--BattlefieldFrame:Show()
-			battleframe = current_time
+	if altstatus then
+		if QuestFrameDetailPanel:IsVisible() then
+			AcceptQuest();
 		end
-	elseif battleframe then
-		battleframe = nil
-	end
-
-	if LPCONFIG.SPECIALKEY then
-		if ctrlstatus and shiftstatus and altstatus and current_time > delayaction then
-			delayaction = current_time + 1
-			Logout();
-		elseif ctrlstatus and not shiftstatus and altstatus and not auctionstatus and not mailstatus and current_time > delayaction then
-			if tradestatus then
-				AcceptTrade();
-			elseif not tradestatus and UnitExists("target") and UnitIsPlayer("target") and UnitIsFriend("target", "player") and not UnitIsUnit("player", "target") and CheckInteractDistance("target", 2) and (current_time + 0.25) > ctrlalttime and current_time > tradedelay then
-				InitiateTrade("target");
-				delayaction = current_time + 2
-			end
-		elseif ctrlstatus and shiftstatus and not altstatus and UnitIsPlayer("target") and UnitIsFriend("target", "player") and current_time > delayaction and (current_time + 0.25) > ctrlshifttime then
-			delayaction = current_time + 1.5
-			FollowUnit("target");
-		elseif not ctrlstatus and shiftstatus and altstatus and UnitIsPlayer("target") and current_time > delayaction and (current_time + 0.25) > altshifttime then
-			delayaction = current_time + 1.5
-			InspectUnit("target");
-		end
-
-		if ctrlstatus and not shiftstatus and altstatus or passpopup > current_time then
-			if current_time > delayaction and not LazyPig_BindLootOpen() and not LazyPig_RollLootOpen() and LazyPig_GreenRoll() then
-				delayaction = current_time + 1
-			elseif current_time > delayaction then
-				for i=1,STATICPOPUP_NUMDIALOGS do
-					local frame = getglobal("StaticPopup"..i)
-					if frame:IsShown() then
-						--DEFAULT_CHAT_FRAME:AddMessage(frame.which)
-						if frame.which == "DEATH" and HasSoulstone() then
-							getglobal("StaticPopup"..i.."Button2"):Click();
-							if passpopup < current_time then delayaction = current_time + 0.5 end
-						elseif frame.which ~= "CONFIRM_SUMMON" and frame.which ~= "CONFIRM_BATTLEFIELD_ENTRY" and frame.which ~= "CAMP" and frame.which ~= "AREA_SPIRIT_HEAL"  then --and release and
-
-							getglobal("StaticPopup"..i.."Button1"):Click();
-							if passpopup < current_time then delayaction = current_time + 0.5 end
-						end
-					end
-				end
-			end
-		end
-
-		if ctrlstatus and not shiftstatus and altstatus then
-			if current_time > delayaction then
-				if auctionstatus and AuctionFrameAuctions and AuctionFrameAuctions:IsVisible() and AuctionsCreateAuctionButton then
-					ScheduleButtonClick(AuctionsCreateAuctionButton, 0);
-				elseif auctionstatus and AuctionFrameBrowse and AuctionFrameBrowse:IsVisible() and BrowseBuyoutButton then
-					ScheduleButtonClick(BrowseBuyoutButton, 0.55);
-				elseif CT_MailFrame and CT_MailFrame:IsVisible() and CT_MailFrame.num > 0 and strlen(CT_MailNameEditBox:GetText()) > 0 and CT_Mail_AcceptSendFrameSendButton then
-					ScheduleButtonClick(CT_Mail_AcceptSendFrameSendButton, 1.25);
-				elseif GMailFrame and GMailFrame:IsVisible() and GMailFrame.num > 0 and strlen(GMailSubjectEditBox:GetText()) > 0 and GMailAcceptSendFrameSendButton then
-					ScheduleButtonClick(GMailAcceptSendFrameSendButton, 1.25);
-				elseif mailstatus and SendMailFrame and SendMailFrame:IsVisible() and SendMailMailButton then
-					ScheduleButtonClick(SendMailMailButton, 0);
-				elseif mailstatus and OpenMailFrame and OpenMailFrame:IsVisible() then
-					if OpenMailFrame.money and OpenMailMoneyButton then
-						ScheduleButtonClick(OpenMailMoneyButton, 0);
-					elseif OpenMailPackageButton then
-						ScheduleButtonClick(OpenMailPackageButton, 0);
-					end
-				end
-			end
-			LazyPig_AutoLeaveBG();
-		elseif not ctrlstatus and shiftstatus and altstatus and current_time > delayaction then
-			if auctionstatus and AuctionFrameBrowse and AuctionFrameBrowse:IsVisible() and BrowseBidButton then
-				ScheduleButtonClick(BrowseBidButton, 0.55);
-			end
-		end
-	end
-
-	if merchantstatus and altstatus and current_time > last_click and not CursorHasItem() then
-		last_click = current_time + 0.25
-		LazyPig_GreySellRepair();
-	end
-
-	if not QuestHaste then
-		if altstatus then
-			if QuestFrameDetailPanel:IsVisible() then
-				AcceptQuest();
-			end
-		elseif QuestRecord["details"] and not altstatus then
-			LazyPig_RecordQuest();
-		end
+	elseif QuestRecord["details"] and not altstatus then
+		LazyPig_RecordQuest();
 	end
 
 	if not afk_active and player_bg_confirm then
@@ -790,7 +702,6 @@ end
 function AcceptGroupInvite()
 	AcceptGroup();
 	StaticPopup_Hide("PARTY_INVITE");
-	PlaySoundFile("Sound\\Doodad\\BellTollNightElf.wav");
 	UIErrorsFrame:AddMessage("Group Auto Accept");
 end
 
@@ -1187,9 +1098,6 @@ function LazyPig_SelectAvailableQuest(index, norecord)
 end
 
 function LazyPig_FixQuest(quest, annouce)
-	if QuestHaste then
-		return
-	end
 	if not QuestRecord["details"] then
 		annouce = true
 	end
@@ -1211,9 +1119,6 @@ function LazyPig_FixQuest(quest, annouce)
 end
 
 function LazyPig_RecordQuest(qdetails)
-	if QuestHaste then
-		return
-	end
 	if IsAltKeyDown() and qdetails then
 		if QuestRecord["details"] ~= qdetails then
 			QuestRecord["details"] = qdetails
@@ -1237,7 +1142,7 @@ function LazyPig_QuestRewardItem_OnClick()
 end
 
 function LazyPig_ReplyQuest(event)
-	if QuestHaste or not IsAltKeyDown() then
+	if not IsAltKeyDown() then
 		return
 	end
 

@@ -344,17 +344,6 @@
 				
 			</Layer>
 		</Layers>
-		<Scripts>
-			<OnShow>
-				local lptxt15 = "CTRL-ALT-SHIFT"
-				if not LPCONFIG.SPECIALKEY then lptxt15 = nil end
-				LazyPig_ShowBindings("LOGOUT","LazyPigText15", nil, lptxt15);
-				LazyPig_ShowBindings("UNSTUCK", "LazyPigText16");
-				LazyPig_ShowBindings("RELOAD", "LazyPigText17");
-				LazyPig_ShowBindings("DUEL", "LazyPigText18", "TARGET WSG EFC/DUEL REQUEST-CANCEL");
-				LazyPig_ShowBindings("WSGDROP", "LazyPigText19", "DROP WSG FLAG/REMOVE SLOW FALL");	
-			</OnShow>
-		</Scripts>
 
 	<Frames>
 		<!-- 1 Alt+Ctrl Roll-->

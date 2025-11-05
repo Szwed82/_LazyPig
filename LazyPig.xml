@@ -2,7 +2,6 @@
 C:\Projects\WoW\Bin\Interface\FrameXML\UI.xsd">
 	<Script file="LazyPig.lua"/>
 	<Script file="LazyPigMenu.lua"/>
-	<Script file="LazyPigKeybindsFrame.lua"/>
 	<Frame name="LazyPig">	
 		<Scripts>
 			<OnLoad>

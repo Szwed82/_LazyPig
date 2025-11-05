@@ -8,7 +8,7 @@ LPCONFIG.DINV = true
 LPCONFIG.SUMM = true
 LPCONFIG.EBG = true
 LPCONFIG.LBG = false
-LPCONFIG.QBG = true
+LPCONFIG.QBG = false
 LPCONFIG.RBG = true
 LPCONFIG.SBG = false
 LPCONFIG.AQUE = false
@@ -46,14 +46,6 @@ LPCONFIG.REZ = true
 LPCONFIG.GOSSIP = true
 LPCONFIG.SALVA = false
 LPCONFIG.REMOVEMANABUFFS = false
-
-BINDING_HEADER_LP_HEADER = "_LazyPig";
-BINDING_NAME_LOGOUT = "Logout";
-BINDING_NAME_UNSTUCK = "Unstuck";
-BINDING_NAME_RELOAD = "Reaload UI";
-BINDING_NAME_DUEL = "Target WSG EFC/Duel Request-Cancel";
-BINDING_NAME_WSGDROP = "Drop WSG Flag/Remove Slow Fall";
-BINDING_NAME_MENU = "_LazyPig Menu";
 
 local Original_SelectGossipActiveQuest = SelectGossipActiveQuest;
 local Original_SelectGossipAvailableQuest = SelectGossipAvailableQuest;
@@ -207,18 +199,13 @@ function LazyPig_OnLoad()
 
 	this:RegisterEvent("ADDON_LOADED");
 	this:RegisterEvent("PLAYER_LOGIN")
-	--this:RegisterEvent("PLAYER_ENTERING_WORLD")
 end
 
 function LazyPig_Command()
 	if LazyPigOptionsFrame:IsShown() then
 		LazyPigOptionsFrame:Hide()
-		LazyPigKeybindsFrame:Hide()
 	else
 		LazyPigOptionsFrame:Show()
-		if getglobal("LazyPigOptionsFrameKeibindsButton"):GetText() == "Hide Keybinds" then
-			LazyPigKeybindsFrame:Show()
-		end
 	end
 end
 
@@ -256,34 +243,12 @@ function LazyPig_OnUpdate()
 		altshifttime = 0
 	end
 
-	if shift_time == current_time  then
-		if not (UnitExists("target") and UnitIsUnit("player", "target")) then
-			--
-		elseif not battleframe then
-			battleframe = current_time
-		elseif (current_time - battleframe) > 3 then
-			--BattlefieldFrame:Show()
-			battleframe = current_time
-		end
-	elseif battleframe then
-		battleframe = nil
-	end
-
 	if altstatus then
 		if QuestFrameDetailPanel:IsVisible() then
 			AcceptQuest();
 		end
 	elseif QuestRecord["details"] and not altstatus then
 		LazyPig_RecordQuest();
-	end
-
-	if not afk_active and player_bg_confirm then
-		Check_Bg_Status();
-	end
-
-	if bgstatus ~= 0 and (bgstatus + 0.5) > current_time then
-		bgstatus = 0
-		Check_Bg_Status()
 	end
 
 	if(current_time - roster_task_refresh) > 29 then
@@ -342,22 +307,17 @@ function LazyPig_OnEvent(event)
 		this:UnregisterEvent("ADDON_LOADED")
 		local LP_TITLE = GetAddOnMetadata("_LazyPig", "Title")
 		local LP_VERSION = GetAddOnMetadata("_LazyPig", "Version")
-		local LP_AUTHOR = GetAddOnMetadata("_LazyPig", "Author")
 
-		DEFAULT_CHAT_FRAME:AddMessage(LP_TITLE .. " v" .. LP_VERSION .. " by " .."|cffFF0066".. LP_AUTHOR .."|cffffffff".. " loaded, type".."|cff00eeee".." /lp".."|cffffffff for options")
+		DEFAULT_CHAT_FRAME:AddMessage(LP_TITLE .. " v" .. LP_VERSION .. " loaded, type".."|cff00eeee".." /lp".."|cffffffff for options")
 	elseif (event == "PLAYER_LOGIN") then
-	--if (event == "PLAYER_ENTERING_WORLD") then
-	--	this:UnregisterEvent("PLAYER_ENTERING_WORLD")
 		this:RegisterEvent("CHAT_MSG")
 		this:RegisterEvent("CHAT_MSG_SYSTEM")
+		this:RegisterEvent("UI_ERROR_MESSAGE")
 		this:RegisterEvent("PARTY_INVITE_REQUEST")
 		this:RegisterEvent("CONFIRM_SUMMON")
 		this:RegisterEvent("RESURRECT_REQUEST")
 		this:RegisterEvent("GOSSIP_SHOW")
 		this:RegisterEvent("QUEST_GREETING")
-		this:RegisterEvent("UI_ERROR_MESSAGE")
-		--this:RegisterEvent("CHAT_MSG_LOOT")
-		--this:RegisterEvent("CHAT_MSG_MONEY")
 		this:RegisterEvent("QUEST_PROGRESS")
 		this:RegisterEvent("QUEST_COMPLETE")
 		this:RegisterEvent("START_LOOT_ROLL")
@@ -377,10 +337,8 @@ function LazyPig_OnEvent(event)
 		this:RegisterEvent("PLAYER_AURAS_CHANGED")
 
 		LazyPigOptionsFrame = LazyPig_CreateOptionsFrame()
-		LazyPigKeybindsFrame = LazyPig_CreateKeybindsFrame()
 
 		LazyPig_CheckSalvation();
-		Check_Bg_Status();
 		LazyPig_AutoSummon();
 		ScheduleFunctionLaunch(LazyPig_ZoneCheck, 6);
 		ScheduleFunctionLaunch(LazyPig_ZoneCheck2, 7);
@@ -470,7 +428,6 @@ function LazyPig_OnEvent(event)
 		if arg1 == CLEARED_DND or arg1 == CLEARED_AFK then
 			dnd_active = false
 			afk_active = false
-			Check_Bg_Status()
 
 		elseif(string.find(arg1, string.sub(MARKED_DND, 1, string.len(MARKED_DND) -3))) then
 			afk_active = false
@@ -701,48 +658,6 @@ function LazyPig_AutoSummon()
 		elseif expireTime == 0 then
 			player_summon_confirm = false
 			player_summon_message = false
-		end
-	end
-end
-
-local bgStatus = {}
-for i = 1, MAX_BATTLEFIELD_QUEUES do
-    bgStatus[i] = { status = "", map = "", id = 0 }
-end
-
-function Check_Bg_Status()
-	local player_bg_active = false
-	local player_bg_request = false
-
-	for i=1, MAX_BATTLEFIELD_QUEUES do
-		local status, mapName, instanceID = GetBattlefieldStatus(i);
-		for k in pairs(bgStatus[i]) do
-			bgStatus[i][k] = nil
-		end
-		bgStatus[i]["status"] = status;
-		bgStatus[i]["map"] = mapName;
-		bgStatus[i]["id"] = instanceID;
-
-		if(status == "confirm" ) then
-			player_bg_request = true
-		elseif((status == "active") and not (mapName == "Eastern Kingdoms") and not (mapName == "Kalimdor")) then
-			player_bg_active = true
-		end
-	end
-
-	player_bg_confirm = player_bg_request
-
-	if(player_bg_message and not player_bg_active and not player_bg_request) then
-		player_bg_message = false
-	end
-
-	if(not player_bg_active and player_bg_request) then
-		local index = 1
-		while bgStatus[index] do
-			if(bgStatus[index]["status"] == "confirm" ) then
-				LazyPig_AutoJoinBG(index, bgStatus[index]["map"]);
-			end
-			index = index + 1
 		end
 	end
 end

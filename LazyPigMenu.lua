@@ -296,31 +296,6 @@ function LazyPig_CreateOptionsFrame()
 	
 	frame.btn_close = btn_close
 
-	frame.btn_close:SetScript("OnClick", function()
-		this:GetParent():Hide()
-			LazyPigKeybindsFrame:Hide()
-	end)
-
-	-- Keybinds Window Button
-	local btn_keybinds = CreateFrame("Button", "LazyPigOptionsFrameKeibindsButton", frame, "GameMenuButtonTemplate")
-	btn_keybinds:SetPoint("TOPLEFT", frame, "TOPLEFT", 33, -18)
-	btn_keybinds:SetWidth(120)
-	btn_keybinds:SetHeight(20)
-	btn_keybinds:SetFont("Fonts\\FRIZQT__.TTF", 8)
-	btn_keybinds:SetText("Show Keybinds")
-
-	frame.btn_keybinds = btn_keybinds
-
-	frame.btn_keybinds:SetScript("OnClick", function()
-		if this:GetText() == "Show Keybinds" then
-			LazyPigKeybindsFrame:Show()
-			this:SetText("Hide Keybinds")
-		else
-			LazyPigKeybindsFrame:Hide()
-			this:SetText("Show Keybinds")
-		end
-	end)
-
 	local str = "Green Items Roll [Ctrl-Alt]"
 	frame.cbgroup_greedroll = CheckBoxGroup(frame, 20, -45, str, CheckBoxTables[str])
 	

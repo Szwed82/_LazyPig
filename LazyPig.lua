@@ -7,11 +7,11 @@ LPCONFIG.SINV = nil
 LPCONFIG.DINV = true
 LPCONFIG.SUMM = true
 LPCONFIG.EBG = true
-LPCONFIG.LBG = true
+LPCONFIG.LBG = false
 LPCONFIG.QBG = true
 LPCONFIG.RBG = true
 LPCONFIG.SBG = false
-LPCONFIG.AQUE = true
+LPCONFIG.AQUE = false
 LPCONFIG.LOOT = true
 LPCONFIG.EPLATE = false
 LPCONFIG.FPLATE = false
@@ -33,7 +33,7 @@ LPCONFIG.KARA_RAID = 0
 LPCONFIG.ROLLMSG = true
 LPCONFIG.DUEL = false
 LPCONFIG.GREEN = 2
-LPCONFIG.SPECIALKEY = true
+LPCONFIG.SPECIALKEY = false
 LPCONFIG.WORLDDUNGEON = false
 LPCONFIG.WORLDRAID = false
 LPCONFIG.WORLDBG = false
@@ -51,7 +51,7 @@ BINDING_HEADER_LP_HEADER = "_LazyPig";
 BINDING_NAME_LOGOUT = "Logout";
 BINDING_NAME_UNSTUCK = "Unstuck";
 BINDING_NAME_RELOAD = "Reaload UI";
-BINDING_NAME_DUEL = "Target WSG EFC";
+BINDING_NAME_DUEL = "Target WSG EFC/Duel Request-Cancel";
 BINDING_NAME_WSGDROP = "Drop WSG Flag/Remove Slow Fall";
 BINDING_NAME_MENU = "_LazyPig Menu";
 
@@ -150,19 +150,19 @@ LazyPigMenuStrings[30] = "GuildMates"
 LazyPigMenuStrings[31] = "Friends"
 LazyPigMenuStrings[32] = "Strangers"
 LazyPigMenuStrings[33] = "Idle while in BG or Queue"
-LazyPigMenuStrings[40] = "Show Friends"
-LazyPigMenuStrings[41] = "Show Enemies"
-LazyPigMenuStrings[42] = "Hide if Unchecked"
+LazyPigMenuStrings[40] = "Deleted"
+LazyPigMenuStrings[41] = "Deleted"
+LazyPigMenuStrings[42] = "Deleted"
 LazyPigMenuStrings[50] = "Enter BG"
-LazyPigMenuStrings[51] = "Leave BG"
+LazyPigMenuStrings[51] = "Deleted"
 LazyPigMenuStrings[52] = "Queue BG"
 LazyPigMenuStrings[53] = "Auto Release"
-LazyPigMenuStrings[54] = "Leader Queue Announce"
+LazyPigMenuStrings[54] = "Deleted"
 LazyPigMenuStrings[55] = "Block BG Quest Sharing"
 
 LazyPigMenuStrings[60] = "Always"
-LazyPigMenuStrings[61] = "Warrior Shield/Druid Bear/Paladin RF"
-LazyPigMenuStrings[62] = "Remove Wis/Int/Spirit"
+LazyPigMenuStrings[61] = "Paladin RighteousFury"
+LazyPigMenuStrings[62] = "Deleted"
 LazyPigMenuStrings[63] = "Remove Aspect of the Wolf"
 
 LazyPigMenuStrings[70] = "Players' Spam"
@@ -175,8 +175,8 @@ LazyPigMenuStrings[91] = "Loot Window Auto Position"
 LazyPigMenuStrings[92] = "Improved Right Click"
 LazyPigMenuStrings[93] = "Easy Split/Merge (Shift+Right_Click)"
 LazyPigMenuStrings[94] = "Extended Camera Distance"
-LazyPigMenuStrings[95] = "Special Key Combinations"
-LazyPigMenuStrings[96] = "Duel Auto Decline"
+LazyPigMenuStrings[95] = "Deleted"
+LazyPigMenuStrings[96] = "Deleted"
 LazyPigMenuStrings[97] = "Instance Resurrection Accept OOC"
 LazyPigMenuStrings[98] = "Gossip Auto Processing"
 LazyPigMenuStrings[100] = "Auto Dismount"
@@ -284,7 +284,6 @@ function LazyPig_OnUpdate()
 	if bgstatus ~= 0 and (bgstatus + 0.5) > current_time then
 		bgstatus = 0
 		Check_Bg_Status()
-		LazyPig_AutoLeaveBG()
 	end
 
 	if(current_time - roster_task_refresh) > 29 then
@@ -347,19 +346,18 @@ function LazyPig_OnEvent(event)
 
 		DEFAULT_CHAT_FRAME:AddMessage(LP_TITLE .. " v" .. LP_VERSION .. " by " .."|cffFF0066".. LP_AUTHOR .."|cffffffff".. " loaded, type".."|cff00eeee".." /lp".."|cffffffff for options")
 	elseif (event == "PLAYER_LOGIN") then
+	--if (event == "PLAYER_ENTERING_WORLD") then
+	--	this:UnregisterEvent("PLAYER_ENTERING_WORLD")
 		this:RegisterEvent("CHAT_MSG")
 		this:RegisterEvent("CHAT_MSG_SYSTEM")
 		this:RegisterEvent("PARTY_INVITE_REQUEST")
 		this:RegisterEvent("CONFIRM_SUMMON")
 		this:RegisterEvent("RESURRECT_REQUEST")
-		this:RegisterEvent("UPDATE_BATTLEFIELD_STATUS")
-		this:RegisterEvent("CHAT_MSG_BG_SYSTEM_ALLIANCE")
-		this:RegisterEvent("CHAT_MSG_BG_SYSTEM_HORDE")
-		this:RegisterEvent("CHAT_MSG_BG_SYSTEM_NEUTRAL")
-		this:RegisterEvent("BATTLEFIELDS_SHOW")
 		this:RegisterEvent("GOSSIP_SHOW")
 		this:RegisterEvent("QUEST_GREETING")
 		this:RegisterEvent("UI_ERROR_MESSAGE")
+		--this:RegisterEvent("CHAT_MSG_LOOT")
+		--this:RegisterEvent("CHAT_MSG_MONEY")
 		this:RegisterEvent("QUEST_PROGRESS")
 		this:RegisterEvent("QUEST_COMPLETE")
 		this:RegisterEvent("START_LOOT_ROLL")
@@ -375,6 +373,7 @@ function LazyPig_OnEvent(event)
 		this:RegisterEvent("BANKFRAME_CLOSED")
 		this:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 		this:RegisterEvent("PLAYER_UNGHOST")
+		this:RegisterEvent("PLAYER_DEAD")
 		this:RegisterEvent("PLAYER_AURAS_CHANGED")
 
 		LazyPigOptionsFrame = LazyPig_CreateOptionsFrame()
@@ -382,7 +381,6 @@ function LazyPig_OnEvent(event)
 
 		LazyPig_CheckSalvation();
 		Check_Bg_Status();
-		LazyPig_AutoLeaveBG();
 		LazyPig_AutoSummon();
 		ScheduleFunctionLaunch(LazyPig_ZoneCheck, 6);
 		ScheduleFunctionLaunch(LazyPig_ZoneCheck2, 7);
@@ -392,12 +390,13 @@ function LazyPig_OnEvent(event)
 		if LPCONFIG.LOOT then UIPanelWindows["LootFrame"] = nil end
 		QuestRecord["index"] = 0
 
-		--TargetUnit("player")
-		--SendChatMessage(".xp 8", "SAY") --qgaming version
-		--SendChatMessage(".exp 5", "SAY") --scriptcraft version
-
-	elseif (LPCONFIG.SALVA and (event == "PLAYER_AURAS_CHANGED") then
+	elseif (LPCONFIG.SALVA and event == "PLAYER_AURAS_CHANGED") then
 		LazyPig_CheckSalvation()
+
+	elseif(event == "PLAYER_DEAD") then
+		if LPCONFIG.RBG and LazyPig_BG() then
+			RepopMe();
+		end
 
 	elseif(event == "ZONE_CHANGED_NEW_AREA" or event == "PLAYER_UNGHOST") then
 		if event == "ZONE_CHANGED_NEW_AREA" then
@@ -410,7 +409,6 @@ function LazyPig_OnEvent(event)
 
 		ScheduleFunctionLaunch(LazyPig_ZoneCheck, 5)
 		ScheduleFunctionLaunch(LazyPig_ZoneCheck, 6)
-		--DEFAULT_CHAT_FRAME:AddMessage(event);
 
 	elseif(event == "BANKFRAME_OPENED") then
 		bankstatus = true
@@ -456,10 +454,6 @@ function LazyPig_OnEvent(event)
 	elseif(event == "START_LOOT_ROLL") then
 		LazyPig_AutoRoll(arg1)
 
-	-- elseif(event == "CHAT_MSG_LOOT") then
-	-- 	if (string.find(arg1 ,"You won") or string.find(arg1 ,"You receive")) and (string.find(arg1 ,"cffa335e") or string.find(arg1, "cff0070d") or string.find(arg1, "cffff840")) and not string.find(arg1 ,"Bijou") and not string.find(arg1 ,"Idol") and not string.find(arg1 ,"Shard") then
-	-- 	end
-
 	elseif(event == "UI_ERROR_MESSAGE") then
 		if(string.find(arg1, "mounted") or string.find(arg1, "while silenced")) and LPCONFIG.DISMOUNT then
 			UIErrorsFrame:Clear()
@@ -471,6 +465,7 @@ function LazyPig_OnEvent(event)
 		if(string.find(arg1, "Can't use that in this Aspect.")) then
 			LazyPig_CancelAspect()
 		end
+
 	elseif (event == "CHAT_MSG_SYSTEM") then
 		if arg1 == CLEARED_DND or arg1 == CLEARED_AFK then
 			dnd_active = false
@@ -485,16 +480,11 @@ function LazyPig_OnEvent(event)
 			afk_active = true
 			if LPCONFIG.EBG and not LazyPig_Raid() and not LazyPig_Dungeon() then UIErrorsFrame:AddMessage("Auto Join BG Inactive - AFK") end
 
-		elseif LPCONFIG.AQUE and string.find(arg1 ,"Queued") and UnitIsPartyLeader("player") then
-			if UnitInRaid("player") then
-				SendChatMessage(arg1, "RAID");
-			elseif GetNumPartyMembers() > 1 then
-				SendChatMessage(arg1, "PARTY");
-			end
-
 		elseif string.find(arg1 ,"completed.") then
 			LazyPig_FixQuest(arg1)
 			QuestRecord["progress"] = nil
+
+	end
 
 	elseif(event == "QUEST_GREETING") then
 		ActiveQuest = {}
@@ -507,9 +497,6 @@ function LazyPig_OnEvent(event)
 		end
 
 		LazyPig_ReplyQuest(event);
-
-		--DEFAULT_CHAT_FRAME:AddMessage("active_: "..table.getn(ActiveQuest))
-		--DEFAULT_CHAT_FRAME:AddMessage("available_: "..table.getn(AvailableQuest))
 
 	elseif(event == "GOSSIP_SHOW") then
 		local GossipOptions = {};
@@ -531,10 +518,6 @@ function LazyPig_OnEvent(event)
 		if table.getn(AvailableQuest) ~= 0 or table.getn(ActiveQuest) ~= 0 then
 			gossipbreak = true
 		end
-
-		--DEFAULT_CHAT_FRAME:AddMessage("gossip: "..table.getn(GossipOptions))
-		--DEFAULT_CHAT_FRAME:AddMessage("active: "..table.getn(ActiveQuest))
-		--DEFAULT_CHAT_FRAME:AddMessage("available: "..table.getn(AvailableQuest))
 
 		for i=1, getn(GossipOptions) do
 			if GossipOptions[i] == "binder" then
@@ -568,16 +551,6 @@ function LazyPig_OnEvent(event)
 
 	elseif(event == "QUEST_PROGRESS" or event == "QUEST_COMPLETE") then
 		LazyPig_ReplyQuest(event);
-
-	elseif (event == "CHAT_MSG_BG_SYSTEM_ALLIANCE" or event == "CHAT_MSG_BG_SYSTEM_HORDE") then
-		--DEFAULT_CHAT_FRAME:AddMessage(event.." - "..arg1);
-		LazyPig_Track_EFC(arg1)
-
-	elseif(event == "UPDATE_BATTLEFIELD_STATUS" and not afk_active or event == "CHAT_MSG_BG_SYSTEM_NEUTRAL" and arg1 and string.find(arg1, "wins!")) then
-		bgstatus = GetTime()
-
-	elseif(event == "BATTLEFIELDS_SHOW") then
-		LazyPig_QueueBG();
 
 	elseif (event == "CONFIRM_SUMMON") then
 		LazyPig_AutoSummon();
@@ -706,7 +679,6 @@ function AcceptGroupInvite()
 end
 
 function LazyPig_AutoSummon()
-	local keyenter = IsAltKeyDown() and IsControlKeyDown() and not tradestatus and not mailstatus and not auctionstatus and GetTime() > delayaction and GetTime() > (tradedelay + 0.5)
 	if LPCONFIG.SUMM then
 		local expireTime = GetSummonConfirmTimeLeft()
 		if not player_summon_message and expireTime ~= 0 then
@@ -714,7 +686,7 @@ function LazyPig_AutoSummon()
 			player_summon_confirm = true
 			DEFAULT_CHAT_FRAME:AddMessage("LazyPig: Auto Summon in "..math.floor(expireTime).."s", 1.0, 1.0, 0.0);
 
-		elseif expireTime <= 3 or keyenter then
+		elseif expireTime <= 3 then
 			player_summon_confirm = false
 			player_summon_message = false
 
@@ -775,54 +747,21 @@ function Check_Bg_Status()
 	end
 end
 
-function LazyPig_QueueBG()
-	if LPCONFIG.QBG then
-		for i=1, MAX_BATTLEFIELD_QUEUES do
-			local status = GetBattlefieldStatus(i);
-			if IsShiftKeyDown() and (status == "queued" or status == "confirm") then
-				AcceptBattlefieldPort(i,nil);
-			end
-		end
-		if (GetNumPartyMembers() > 0 or GetNumRaidMembers() > 0) and IsPartyLeader() then
-			JoinBattlefield(0,1);
-		else
-			JoinBattlefield(0);
-		end
-		ClearTarget();
-		BattlefieldFrameCancelButton:Click()
-	end
-end
-
 function LazyPig_AutoJoinBG(index, map_name)
-	local keyenter = IsAltKeyDown() and IsControlKeyDown() and not tradestatus and not mailstatus and not auctionstatus and GetTime() > delayaction and GetTime() > (tradedelay + 0.5)
-	if LPCONFIG.EBG or keyenter then
+	if LPCONFIG.EBG then
 		local expireTime = GetBattlefieldPortExpiration(index)/1000
 		expireTime = math.floor(expireTime);
 		if not player_bg_message and expireTime > 3 and GetTime() > delayaction then
 			player_bg_message = true
 			DEFAULT_CHAT_FRAME:AddMessage("LazyPig: Auto Join ".. map_name.." in "..expireTime.."s", 1.0, 1.0, 0.0)
 
-		elseif expireTime <= 3 or keyenter then
+		elseif expireTime <= 3 then
 			AcceptBattlefieldPort(index, true);
 			StaticPopup_Hide("CONFIRM_BATTLEFIELD_ENTRY")
 			delayaction = GetTime() + 0.75
 			if player_bg_message then
 				player_bg_message = false
 			end
-		end
-	end
-end
-
-function LazyPig_AutoLeaveBG()
-	local keyenter = IsAltKeyDown() and IsControlKeyDown()
-	if LPCONFIG.LBG or keyenter then
-		local bg_winner = GetBattlefieldWinner()
-		local winner_name = "Alliance"
-		if bg_winner ~= nil then
-			if bg_winner == 0 then winner_name = "Horde" end
-			UIErrorsFrame:Clear();
-			UIErrorsFrame:AddMessage(winner_name.." Wins");
-			LeaveBattlefield();
 		end
 	end
 end
@@ -1007,41 +946,6 @@ function LazyPig_GreenRoll()
 		end
 	end
 	return pass
-end
-
-function LazyPig_GreySellRepair()
-	local bag, slot = LazyPig_BagReturn("ff9d9d9d")
-	if bag and slot then
-		local _, _, locked = GetContainerItemInfo(bag, slot)
-		if bag and slot and not locked then
-			UseContainerItem(bag,slot)
-			if not(GreySell.bag == bag and GreySell.slot == slot) then
-				DEFAULT_CHAT_FRAME:AddMessage("LazyPig: Selling "..GetContainerItemLink(bag, slot))
-				GreySell.bag = bag
-				GreySell.slot = slot
-			end
-		end
-	elseif CanMerchantRepair() then
-		local rcost = GetRepairAllCost()
-		if rcost and rcost ~= 0 then
-			if rcost > GetMoney() then
-				DEFAULT_CHAT_FRAME:AddMessage("LazyPig: Not Enough Money to Repair")
-				return
-			end
-			GreySell.repair = rcost
-			RepairAllItems();
-		elseif GreySell.repair and	rcost == 0 then
-			local gold = floor(abs(GreySell.repair / 10000))
-			local silver = floor(abs(mod(GreySell.repair / 100, 100)))
-			local copper = floor(abs(mod(GreySell.repair, 100)))
-			local COLOR_COPPER = "|cffeda55f"
-			local COLOR_SILVER = "|cffc7c7cf"
-			local COLOR_GOLD = "|cffffd700"
-
-			DEFAULT_CHAT_FRAME:AddMessage("LazyPig: Repairing All Items "..COLOR_GOLD..gold.."g "..COLOR_SILVER..silver.."s "..COLOR_COPPER..copper.."c")
-			GreySell.repair = nil
-		end
-	end
 end
 
 function LazyPig_ProcessQuests(...)
@@ -1783,12 +1687,26 @@ function LazyPig_SetOption(num)
 	elseif num == 40 then 								--fixed
 		LPCONFIG.FPLATE = true
 		if not checked then LPCONFIG.FPLATE = nil end
+		if LPCONFIG.EPLATE and LPCONFIG.FPLATE then
+			LPCONFIG.HPLATE = nil
+			LazyPigMenuObjects[42]:SetChecked(nil)
+		end
 	elseif num == 41 then
 		LPCONFIG.EPLATE = true
 		if not checked then LPCONFIG.EPLATE = nil end
+		if LPCONFIG.EPLATE and LPCONFIG.FPLATE then
+			LPCONFIG.HPLATE = nil
+			LazyPigMenuObjects[42]:SetChecked(nil)
+		end
 	elseif num == 42 then
 		LPCONFIG.HPLATE = true
-		if not checked then LPCONFIG.HPLATE = nil end
+		if not checked then
+			LPCONFIG.HPLATE = nil
+		end
+		if LPCONFIG.EPLATE and LPCONFIG.FPLATE then
+			LPCONFIG.HPLATE = nil
+			LazyPigMenuObjects[42]:SetChecked(nil)
+		end
 	elseif num == 50 then --fixed
 		LPCONFIG.EBG = true
 		if not checked then LPCONFIG.EBG = nil end
@@ -2003,7 +1921,7 @@ end
 
 local salvationbuffs = {"Spell_Holy_SealOfSalvation", "Spell_Holy_GreaterBlessingofSalvation"}
 function LazyPig_CheckSalvation()
-	if(LPCONFIG.SALVA == 1 or (LPCONFIG.SALVA == 2 and LazyPig_HasRighteousFury())) then
+	if(LPCONFIG.SALVA == 1 or (LPCONFIG.SALVA == 2 and (LazyPig_HasRighteousFury()))) then
 		local counter = 0
 		while GetPlayerBuff(counter) >= 0 do
 			local index, untilCancelled = GetPlayerBuff(counter)
@@ -2085,11 +2003,6 @@ function LazyPig_ChatFrame_OnEvent(event)
 		ChatMessage[index][arg1] = time
 	end
 
-    -- suppress BigWigs spam
-	if LPCONFIG.SPAM and event == "CHAT_MSG_SAY" and string.find(arg1 or "" ,"^Casted %u[%a%s]+ on %u[%a%s]+") then
-        return
-    end
-
 	Original_ChatFrame_OnEvent(event);
 end
 
@@ -2113,40 +2026,6 @@ function ChatSpamClean()
 	ChatMessage["INDEX"] = newindex
 
 	--DEFAULT_CHAT_FRAME:AddMessage("ChatSpamClean")
-end
-
-function LazyPig_Track_EFC(msg)
-	if msg then
-		msg = strlower(msg)
-
-		local find0 = "captured "
-		local find1 = "The "..UnitFactionGroup("player").." Flag"
-		local find2 = " was picked up "
-		local find3 = " was dropped "
-
-		if string.find(msg, strlower(find1..find2)) then
-			_, _, wsgefc = string.find(msg, strlower(find1..find2.."by (.+)%!"))
-			--DEFAULT_CHAT_FRAME:AddMessage("ADD EFC - "..wsgefc)
-		elseif string.find(msg, strlower(find1..find3)) or string.find(msg, strlower(find0..find1)) then
-			wsgefc = nil
-			--DEFAULT_CHAT_FRAME:AddMessage("DEL EFC")
-		end
-	end
-end
-
-function LazyPig_Target_EFC()
-	ClearTarget()
-	if wsgefc then
-		TargetByName(wsgefc, true)
-		UIErrorsFrame:Clear()
-		if not UnitExists("target") then
-			UIErrorsFrame:AddMessage("OUT OF RANGE - EFC - "..strupper(wsgefc))
-		elseif strlower(GetUnitName("target")) == wsgefc then
-			local class, classFileName = UnitClass("target")
-			local color = RAID_CLASS_COLORS[classFileName]
-			UIErrorsFrame:AddMessage(strupper(class.." - EFC - "..wsgefc), color.r, color.g, color.b)
-		end
-	end
 end
 
 function LazyPig_HasRighteousFury()

@@ -1,3 +1,5 @@
+# Cleaned from some particularly resource-hungry features
+
 This mod is mostly for lazy people:
 
 AUTO DISMOUNT 				- when casting spell or interacting with flightmaster(aq40 mounts included)

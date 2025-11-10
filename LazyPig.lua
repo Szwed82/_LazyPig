@@ -741,108 +741,66 @@ function LazyPig_SetOption(num)
 	if num == 00 then
 		LPCONFIG.GREEN = 1
 		if not checked then LPCONFIG.GREEN = nil end
-		LazyPigMenuObjects[01]:SetChecked(nil)
-		LazyPigMenuObjects[02]:SetChecked(nil)
 	elseif num == 01 then
 		LPCONFIG.GREEN = 2
 		if not checked then LPCONFIG.GREEN = nil end
-		LazyPigMenuObjects[00]:SetChecked(nil)
-		LazyPigMenuObjects[02]:SetChecked(nil)
 	elseif num == 02 then
 		LPCONFIG.GREEN = 0
 		if not checked then LPCONFIG.GREEN = nil end
-		LazyPigMenuObjects[00]:SetChecked(nil)
-		LazyPigMenuObjects[01]:SetChecked(nil)
 	elseif num == 03 then
 		LPCONFIG.ZG = 1
 		if not checked then LPCONFIG.ZG = nil end
-		LazyPigMenuObjects[04]:SetChecked(nil)
-		LazyPigMenuObjects[05]:SetChecked(nil)
 	elseif num == 04 then
 		LPCONFIG.ZG = 2
 		if not checked then LPCONFIG.ZG = nil end
-		LazyPigMenuObjects[03]:SetChecked(nil)
-		LazyPigMenuObjects[05]:SetChecked(nil)
 	elseif num == 05 then
 		LPCONFIG.ZG = 0
 		if not checked then LPCONFIG.ZG = nil end
-		LazyPigMenuObjects[03]:SetChecked(nil)
-		LazyPigMenuObjects[04]:SetChecked(nil)
 	elseif num == 06 then
 		LPCONFIG.MC = 1
 		if not checked then LPCONFIG.MC = nil end
-		LazyPigMenuObjects[07]:SetChecked(nil)
-		LazyPigMenuObjects[08]:SetChecked(nil)
 	elseif num == 07 then
 		LPCONFIG.MC = 2
 		if not checked then LPCONFIG.MC = nil end
-		LazyPigMenuObjects[06]:SetChecked(nil)
-		LazyPigMenuObjects[08]:SetChecked(nil)
 	elseif num == 08 then
 		LPCONFIG.MC = 0
 		if not checked then LPCONFIG.MC = nil end
-		LazyPigMenuObjects[06]:SetChecked(nil)
-		LazyPigMenuObjects[07]:SetChecked(nil)
 	elseif num == 09 then
 		LPCONFIG.AQ = 1
 		if not checked then LPCONFIG.AQ = nil end
-		LazyPigMenuObjects[10]:SetChecked(nil)
-		LazyPigMenuObjects[11]:SetChecked(nil)
 	elseif num == 10 then
 		LPCONFIG.AQ = 2
 		if not checked then LPCONFIG.AQ = nil end
-		LazyPigMenuObjects[09]:SetChecked(nil)
-		LazyPigMenuObjects[11]:SetChecked(nil)
 	elseif num == 11 then
 		LPCONFIG.AQ = 0
 		if not checked then LPCONFIG.AQ = nil end
-		LazyPigMenuObjects[09]:SetChecked(nil)
-		LazyPigMenuObjects[10]:SetChecked(nil)
 	elseif num == 12 then
 		LPCONFIG.AQMOUNT = 1
 		if not checked then LPCONFIG.AQMOUNT = nil end
-		LazyPigMenuObjects[13]:SetChecked(nil)
-		LazyPigMenuObjects[14]:SetChecked(nil)
 	elseif num == 13 then
 		LPCONFIG.AQMOUNT = 2
 		if not checked then LPCONFIG.AQMOUNT = nil end
-		LazyPigMenuObjects[12]:SetChecked(nil)
-		LazyPigMenuObjects[14]:SetChecked(nil)
 	elseif num == 14 then
 		LPCONFIG.AQMOUNT = 0
 		if not checked then LPCONFIG.AQMOUNT = nil end
-		LazyPigMenuObjects[12]:SetChecked(nil)
-		LazyPigMenuObjects[13]:SetChecked(nil)
 	elseif num == 15 then
 		LPCONFIG.SAND = 1
 		if not checked then LPCONFIG.SAND = nil end
-		LazyPigMenuObjects[16]:SetChecked(nil)
-		LazyPigMenuObjects[17]:SetChecked(nil)
 	elseif num == 16 then
 		LPCONFIG.SAND = 2
 		if not checked then LPCONFIG.SAND = nil end
-		LazyPigMenuObjects[15]:SetChecked(nil)
-		LazyPigMenuObjects[17]:SetChecked(nil)
 	elseif num == 17 then
 		LPCONFIG.SAND = 0
 		if not checked then LPCONFIG.SAND = nil end
-		LazyPigMenuObjects[18]:SetChecked(nil)
-		LazyPigMenuObjects[19]:SetChecked(nil)
 	elseif num == 18 then
 		LPCONFIG.NAXX = 1
 		if not checked then LPCONFIG.NAXX = nil end
-		LazyPigMenuObjects[19]:SetChecked(nil)
-		LazyPigMenuObjects[20]:SetChecked(nil)
 	elseif num == 19 then
 		LPCONFIG.NAXX = 2
 		if not checked then LPCONFIG.NAXX = nil end
-		LazyPigMenuObjects[18]:SetChecked(nil)
-		LazyPigMenuObjects[20]:SetChecked(nil)
 	elseif num == 20 then
 		LPCONFIG.NAXX = 0
 		if not checked then LPCONFIG.NAXX = nil end
-		LazyPigMenuObjects[18]:SetChecked(nil)
-		LazyPigMenuObjects[19]:SetChecked(nil)
 	elseif num == 21 then
 		LPCONFIG.ROLLMSG = true
 		if not checked then LPCONFIG.ROLLMSG = nil end
@@ -888,18 +846,12 @@ function LazyPig_SetOption(num)
 	elseif num == 26 then
 		LPCONFIG.BWL = 1
 		if not checked then LPCONFIG.BWL = nil end
-		LazyPigMenuObjects[27]:SetChecked(nil)
-		LazyPigMenuObjects[28]:SetChecked(nil)
 	elseif num == 27 then
 		LPCONFIG.BWL = 2
 		if not checked then LPCONFIG.BWL = nil end
-		LazyPigMenuObjects[26]:SetChecked(nil)
-		LazyPigMenuObjects[28]:SetChecked(nil)
 	elseif num == 28 then
 		LPCONFIG.BWL = 0
 		if not checked then LPCONFIG.BWL = nil end
-		LazyPigMenuObjects[26]:SetChecked(nil)
-		LazyPigMenuObjects[27]:SetChecked(nil)
 	elseif num == 30 then 								--fixed
 		LPCONFIG.GINV = true
 		if not checked then LPCONFIG.GINV = nil end
@@ -915,26 +867,11 @@ function LazyPig_SetOption(num)
 	elseif num == 40 then 								--fixed
 		LPCONFIG.FPLATE = true
 		if not checked then LPCONFIG.FPLATE = nil end
-		if LPCONFIG.EPLATE and LPCONFIG.FPLATE then
-			LPCONFIG.HPLATE = nil
-			LazyPigMenuObjects[42]:SetChecked(nil)
-		end
 	elseif num == 41 then
 		LPCONFIG.EPLATE = true
 		if not checked then LPCONFIG.EPLATE = nil end
-		if LPCONFIG.EPLATE and LPCONFIG.FPLATE then
-			LPCONFIG.HPLATE = nil
-			LazyPigMenuObjects[42]:SetChecked(nil)
-		end
 	elseif num == 42 then
 		LPCONFIG.HPLATE = true
-		if not checked then
-			LPCONFIG.HPLATE = nil
-		end
-		if LPCONFIG.EPLATE and LPCONFIG.FPLATE then
-			LPCONFIG.HPLATE = nil
-			LazyPigMenuObjects[42]:SetChecked(nil)
-		end
 	elseif num == 50 then --fixed
 		LPCONFIG.EBG = true
 		if not checked then LPCONFIG.EBG = nil end
@@ -981,7 +918,6 @@ function LazyPig_SetOption(num)
 	elseif num == 73 then
 		LPCONFIG.SPAM_LOOT	 = true
 		if not checked then LPCONFIG.SPAM_LOOT	 = nil end
-
 	elseif num == 90 then
 		LPCONFIG.SUMM = true
 		if not checked then LPCONFIG.SUMM = nil end
@@ -1004,7 +940,6 @@ function LazyPig_SetOption(num)
 	elseif num == 96 then
 		LPCONFIG.DUEL = true
 		if not checked then LPCONFIG.DUEL = nil end
-		if LPCONFIG.DUEL then CancelDuel() end
 	elseif num == 97 then
 		LPCONFIG.REZ = true
 		if not checked then LPCONFIG.REZ = nil end
@@ -1020,48 +955,30 @@ function LazyPig_SetOption(num)
 	elseif num == 102 then
 		LPCONFIG.WHITE_TAILORING = 1
 		if not checked then LPCONFIG.WHITE_TAILORING = nil end
-		LazyPigMenuObjects[103]:SetChecked(nil)
-		LazyPigMenuObjects[104]:SetChecked(nil)
 	elseif num == 103 then
 		LPCONFIG.WHITE_TAILORING = 2
 		if not checked then LPCONFIG.WHITE_TAILORING = nil end
-		LazyPigMenuObjects[102]:SetChecked(nil)
-		LazyPigMenuObjects[104]:SetChecked(nil)
 	elseif num == 104 then
 		LPCONFIG.WHITE_TAILORING = 0
 		if not checked then LPCONFIG.WHITE_TAILORING = nil end
-		LazyPigMenuObjects[102]:SetChecked(nil)
-		LazyPigMenuObjects[103]:SetChecked(nil)
 	elseif num == 105 then
 		LPCONFIG.FOOD_AND_DRINK = 1
 		if not checked then LPCONFIG.FOOD_AND_DRINK = nil end
-		LazyPigMenuObjects[106]:SetChecked(nil)
-		LazyPigMenuObjects[107]:SetChecked(nil)
 	elseif num == 106 then
 		LPCONFIG.FOOD_AND_DRINK = 2
 		if not checked then LPCONFIG.FOOD_AND_DRINK = nil end
-		LazyPigMenuObjects[105]:SetChecked(nil)
-		LazyPigMenuObjects[107]:SetChecked(nil)
 	elseif num == 107 then
 		LPCONFIG.FOOD_AND_DRINK = 0
 		if not checked then LPCONFIG.FOOD_AND_DRINK = nil end
-		LazyPigMenuObjects[105]:SetChecked(nil)
-		LazyPigMenuObjects[106]:SetChecked(nil)
 	elseif num == 108 then
 		LPCONFIG.ES_SHARDS = 1
 		if not checked then LPCONFIG.ES_SHARDS = nil end
-		LazyPigMenuObjects[109]:SetChecked(nil)
-		LazyPigMenuObjects[110]:SetChecked(nil)
 	elseif num == 109 then
 		LPCONFIG.ES_SHARDS = 2
 		if not checked then LPCONFIG.ES_SHARDS = nil end
-		LazyPigMenuObjects[108]:SetChecked(nil)
-		LazyPigMenuObjects[110]:SetChecked(nil)
 	elseif num == 110 then
 		LPCONFIG.ES_SHARDS = 0
 		if not checked then LPCONFIG.ES_SHARDS = nil end
-		LazyPigMenuObjects[108]:SetChecked(nil)
-		LazyPigMenuObjects[109]:SetChecked(nil)
 	else
 		--DEFAULT_CHAT_FRAME:AddMessage("DEBUG: No num assigned - "..num)
 	end

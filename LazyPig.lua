@@ -1,56 +1,41 @@
-LPCONFIG = {}
-LPCONFIG.DISMOUNT = false
-LPCONFIG.CAM = false
-LPCONFIG.GINV = false
-LPCONFIG.FINV = false
-LPCONFIG.SINV = nil
-LPCONFIG.DINV = false
-LPCONFIG.SUMM = true
-LPCONFIG.EBG = false
-LPCONFIG.LBG = false
-LPCONFIG.QBG = false
-LPCONFIG.RBG = false
-LPCONFIG.SBG = false
-LPCONFIG.AQUE = false
-LPCONFIG.LOOT = false
-LPCONFIG.EPLATE = false
-LPCONFIG.FPLATE = false
-LPCONFIG.HPLATE = false
-LPCONFIG.RIGHT = true
-LPCONFIG.ZG = 1
-LPCONFIG.MC = 1
-LPCONFIG.AQ = 2
-LPCONFIG.AQMOUNT = 0
-LPCONFIG.SAND = 1
-LPCONFIG.NAXX = 0
-LPCONFIG.BWL = 0
-LPCONFIG.WHITE_TAILORING = 0
-LPCONFIG.FOOD_AND_DRINK = 0
-LPCONFIG.ES_SHARDS = 0
-LPCONFIG.ROLLMSG = true
-LPCONFIG.DUEL = false
-LPCONFIG.GREEN = 2
-LPCONFIG.SPECIALKEY = false
-LPCONFIG.WORLDDUNGEON = false
-LPCONFIG.WORLDRAID = false
-LPCONFIG.WORLDBG = false
-LPCONFIG.WORLDUNCHECK = nil
-LPCONFIG.SPAM = false
-LPCONFIG.SPAM_UNCOMMON = false
-LPCONFIG.SPAM_RARE = false
-LPCONFIG.SHIFTSPLIT = false
-LPCONFIG.REZ = true
-LPCONFIG.GOSSIP = false
-LPCONFIG.SALVA = false
-LPCONFIG.REMOVEMANABUFFS = false
+local _G = _G or getfenv(0)
 
-BINDING_HEADER_LP_HEADER = "_LazyPig";
-BINDING_NAME_LOGOUT = "Logout";
-BINDING_NAME_UNSTUCK = "Unstuck";
-BINDING_NAME_RELOAD = "Reaload UI";
-BINDING_NAME_DUEL = "Target WSG EFC/Duel Request-Cancel";
-BINDING_NAME_WSGDROP = "Drop WSG Flag/Remove Slow Fall";
-BINDING_NAME_MENU = "_LazyPig Menu";
+-- Default SavedVariables
+LPCONFIG = {}
+LPCONFIG.DISMOUNT = true           -- Auto Dismount
+LPCONFIG.AUTOSTANCE = true         -- Auto Stance
+LPCONFIG.CAM = false               -- Extended camera distance
+LPCONFIG.GINV = true               -- Auto accept invites from guild members
+LPCONFIG.FINV = true               -- Auto accept invites from friends
+LPCONFIG.SINV = false              -- Auto accept invites from strangers
+LPCONFIG.DINV = false               -- Disable auto accept invite whiel in bg or in bg queue
+LPCONFIG.SUMM = false              -- Auto accept summons
+LPCONFIG.EBG = false                -- Auto join battleground
+LPCONFIG.LBG = false                -- Auto leave battleground
+LPCONFIG.QBG = false                -- Auto queue battleground
+LPCONFIG.RBG = false                -- Auto release spirit in battleground
+LPCONFIG.SBG = false               -- Auto decline quest sharing while in battleground
+LPCONFIG.AQUE = false              -- Announce when queueing for battleground as party leader
+LPCONFIG.LOOT = false              -- Position loot frame at cursor
+LPCONFIG.RIGHT = false              -- Improved right click
+LPCONFIG.GREEN = nil               -- [number or nil] Auto roll on green items
+LPCONFIG.ZG = nil                  -- [number or nil] ZG coins/bijou auto roll
+LPCONFIG.MC = nil                  -- [number or nil] MC mats auto roll
+LPCONFIG.AQ = nil                  -- [number or nil] AQ scarabs/idols auto roll
+LPCONFIG.SAND = nil                -- [number or nil] Corrupted sand auto roll
+LPCONFIG.ES_SHARDS = nil           -- [number or nil] Dream Shrads auto roll
+LPCONFIG.ROLLMSG = false           -- Lazy Pig Auto Roll Messages
+LPCONFIG.WORLDDUNGEON = false      -- Mute Wolrd chat while in dungeons
+LPCONFIG.WORLDRAID = false         -- Mute Wolrd chat while in raid
+LPCONFIG.WORLDBG = false           -- Mute Wolrd chat while in battleground
+LPCONFIG.WORLDUNCHECK = false      -- Mute Wolrd chat always
+LPCONFIG.SPAM = false              -- Hide players spam messages
+LPCONFIG.SPAM_UNCOMMON = false     -- Hide green items roll messages
+LPCONFIG.SPAM_RARE = false         -- Hide blue items roll messages
+LPCONFIG.SHIFTSPLIT = false        -- Improved stack splitting with shift
+LPCONFIG.REZ = false               -- Auto accept resurrection while in raid, dungeon or bg if resurrecter is out of combat
+LPCONFIG.GOSSIP = false             -- Auto proccess gossip
+LPCONFIG.SALVA = nil               -- [number or nil] Autoremove Blessing of Salvation
 
 local Original_SelectGossipActiveQuest = SelectGossipActiveQuest;
 local Original_SelectGossipAvailableQuest = SelectGossipAvailableQuest;
@@ -58,7 +43,6 @@ local Original_SelectActiveQuest = SelectActiveQuest;
 local Original_SelectAvailableQuest = SelectAvailableQuest;
 local OriginalLootFrame_OnEvent = LootFrame_OnEvent;
 local OriginalLootFrame_Update = LootFrame_Update;
-local Original_SetItemRef = SetItemRef;
 local Original_ChatFrame_OnEvent = ChatFrame_OnEvent;
 local Original_StaticPopup_OnShow = StaticPopup_OnShow;
 local Original_QuestRewardItem_OnClick = QuestRewardItem_OnClick
@@ -82,52 +66,42 @@ local player_summon_message = nil
 local player_bg_confirm = nil
 local player_bg_message = nil
 local afk_active = nil
-local duel_active = nil
-local dnd_active = false
-local merchantstatus = nil
-local tradestatus = nil
-local mailstatus = nil
-local auctionstatus = nil
-local auctionbrowse = nil
-local bankstatus = nil
 local channelstatus = nil
 local battleframe = nil
-local wsgefc = nil
-
-local WHITE = "|cffffffff"
-local RED = "|cffff0000"
-local GREEN = "|cff00ff00"
-local BLUE = "|cff00eeee"
 
 local ScheduleFunction = {}
 local QuestRecord = {}
 local ActiveQuest = {}
 local AvailableQuest = {}
 local ChatMessage = {{}, {}, INDEX = 1}
+local GossipOptions = {}
 
+local function twipe(t)
+	if type(t) == "table" then
+		for i = table.getn(t), 1, -1 do
+			table.remove(t, i)
+		end
+		for k in next, t do
+			t[k] = nil
+		end
+		return t
+	else
+		return {}
+	end
+end
 
-local LazyPigMenuObjects = {}
-local LazyPigMenuStrings = {}
-LazyPigMenuStrings[21] = "LazyPig Auto Roll Messages"
-LazyPigMenuStrings[22] = "Dungeon"
-LazyPigMenuStrings[23] = "Raid"
-LazyPigMenuStrings[24] = "Battleground"
-LazyPigMenuStrings[25] = "Mute Permanently"
-
-LazyPigMenuStrings[60] = "Always"
-LazyPigMenuStrings[61] = "Paladin Righteous Fury"
-
-LazyPigMenuStrings[70] = "Players' Spam"
-LazyPigMenuStrings[71] = "Uncommon Roll"
-LazyPigMenuStrings[72] = "Rare Roll"
-LazyPigMenuStrings[73] = "Poor-Common-Money Loot"
-
-LazyPigMenuStrings[90] = "Summon Auto Accept"
-LazyPigMenuStrings[91] = "Loot Window Auto Position"
-LazyPigMenuStrings[94] = "Extended Camera Distance"
-LazyPigMenuStrings[97] = "Instance Resurrection Accept OOC"
-LazyPigMenuStrings[98] = "Gossip Auto Processing"
-LazyPigMenuStrings[101] = "Chat Spam Filter"
+local function strsplit(str, delimiter, container)
+	local result = twipe(container)
+	local from = 1
+	local delim_from, delim_to = string.find(str, delimiter, from, true)
+	while delim_from do
+		table.insert(result, string.sub(str, from, delim_from - 1))
+		from = delim_to + 1
+		delim_from, delim_to = string.find(str, delimiter, from, true)
+	end
+	table.insert(result, string.sub(str, from))
+	return result
+end
 
 function LazyPig_OnLoad()
 	SelectGossipActiveQuest = LazyPig_SelectGossipActiveQuest;
@@ -136,7 +110,6 @@ function LazyPig_OnLoad()
 	SelectAvailableQuest = LazyPig_SelectAvailableQuest;
 	LootFrame_OnEvent = LazyPig_LootFrame_OnEvent;
 	LootFrame_Update = LazyPig_LootFrame_Update;
-	SetItemRef = LazyPig_SetItemRef_OnEvent;
 	ChatFrame_OnEvent = LazyPig_ChatFrame_OnEvent;
 	StaticPopup_OnShow = LazyPig_StaticPopup_OnShow;
 	QuestRewardItem_OnClick = LazyPig_QuestRewardItem_OnClick
@@ -145,8 +118,21 @@ function LazyPig_OnLoad()
 	SLASH_LAZYPIG2 = "/lazypig";
 	SlashCmdList["LAZYPIG"] = LazyPig_Command;
 
-	this:RegisterEvent("ADDON_LOADED");
+	this:RegisterEvent("ADDON_LOADED")
 	this:RegisterEvent("PLAYER_LOGIN")
+	this:RegisterEvent("CHAT_MSG")
+	this:RegisterEvent("CHAT_MSG_SYSTEM")
+	this:RegisterEvent("PARTY_INVITE_REQUEST")
+	this:RegisterEvent("CONFIRM_SUMMON")
+	this:RegisterEvent("RESURRECT_REQUEST")
+	this:RegisterEvent("GOSSIP_SHOW")
+	this:RegisterEvent("QUEST_GREETING")
+	this:RegisterEvent("UI_ERROR_MESSAGE")
+	this:RegisterEvent("QUEST_PROGRESS")
+	this:RegisterEvent("QUEST_COMPLETE")
+	this:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+	this:RegisterEvent("PLAYER_UNGHOST")
+	this:RegisterEvent("PLAYER_AURAS_CHANGED")
 end
 
 function LazyPig_Command()
@@ -192,9 +178,7 @@ function LazyPig_OnUpdate()
 		LazyPig_AutoSummon();
 	end
 
-	LazyPig_CheckSalvation();
 	ScheduleFunctionLaunch();
-
 end
 
 function ScheduleFunctionLaunch(func, delay)
@@ -212,55 +196,97 @@ function ScheduleFunctionLaunch(func, delay)
 	end
 end
 
+local ErrorDismountAndForm = {
+	[SPELL_FAILED_NOT_MOUNTED] = 1,                  -- "You are mounted"
+	[ERR_ATTACK_MOUNTED] = 1,                        -- "Can't attack while mounted."
+	[ERR_TAXIPLAYERALREADYMOUNTED] = 1,              -- "You are already mounted! Dismount first."
+	[ERR_MOUNT_SHAPESHIFTED] = 1,                    -- "You can't mount while shapeshifted!"
+	[SPELL_FAILED_NOT_SHAPESHIFT] = 1,               -- "You are in shapeshift form"
+	[SPELL_FAILED_NO_ITEMS_WHILE_SHAPESHIFTED] = 1,  -- "Can't use items while shapeshifted"
+	[SPELL_NOT_SHAPESHIFTED] = 1,                    -- "Can't do that while shapeshifted."
+	[SPELL_NOT_SHAPESHIFTED_NOSPACE] = 1,            -- "Can't do that while shapeshifted."
+	[ERR_TAXIPLAYERSHAPESHIFTED] = 1,                -- "You can't take a taxi while shapeshifted!"
+	[ERR_CANT_INTERACT_SHAPESHIFTED] = 1,            -- "Can't speak while shapeshifted."
+	[ERR_NO_ITEMS_WHILE_SHAPESHIFTED] = 1,           -- "Can't use items while shapeshifted."
+	[ERR_NOT_WHILE_SHAPESHIFTED] = 1                 -- "You can't do that while shapeshifted."
+}
+local ErrorStanding = {
+	[ERR_TAXINOTSTANDING] = 1,                       -- "You need to be standing to go anywhere."
+	[ERR_LOOT_NOTSTANDING] = 1,                      -- "You need to be standing up to loot something!"
+	[ERR_CANTATTACK_NOTSTANDING] = 1,                -- "You have to be standing to attack anything!"
+	[SPELL_FAILED_NOT_STANDING] = 1                  -- "You must be standing to do that"
+}
+
 function LazyPig_OnEvent(event)
-	if (event == "ADDON_LOADED") and (arg1 == "_LazyPig") then
+	if event == "ADDON_LOADED" and arg1 == "_LazyPig" then
 		this:UnregisterEvent("ADDON_LOADED")
-		local LP_TITLE = GetAddOnMetadata("_LazyPig", "Title")
-		local LP_VERSION = GetAddOnMetadata("_LazyPig", "Version")
-		local LP_AUTHOR = GetAddOnMetadata("_LazyPig", "Author")
+		local title = GetAddOnMetadata("_LazyPig", "Title")
+		local version = GetAddOnMetadata("_LazyPig", "Version")
+		DEFAULT_CHAT_FRAME:AddMessage(title.." v"..version.."|cffffffff".." loaded, type".."|cff00eeee".." /lp".."|cffffffff for options")
 
-		DEFAULT_CHAT_FRAME:AddMessage(LP_TITLE .. " v" .. LP_VERSION .. " by " .."|cffFF0066".. LP_AUTHOR .."|cffffffff".. " loaded, type".."|cff00eeee".." /lp".."|cffffffff for options")
-	elseif (event == "PLAYER_LOGIN") then
-		this:RegisterEvent("CHAT_MSG")
-		this:RegisterEvent("CHAT_MSG_SYSTEM")
-		this:RegisterEvent("CONFIRM_SUMMON")
-		this:RegisterEvent("RESURRECT_REQUEST")
-		this:RegisterEvent("GOSSIP_SHOW")
-		this:RegisterEvent("QUEST_GREETING")
-		this:RegisterEvent("QUEST_PROGRESS")
-		this:RegisterEvent("QUEST_COMPLETE")
-		this:RegisterEvent("ZONE_CHANGED_NEW_AREA")
-		this:RegisterEvent("PLAYER_UNGHOST")
-		this:RegisterEvent("PLAYER_AURAS_CHANGED")
-
-		LazyPigOptionsFrame = LazyPig_CreateOptionsFrame()
+	elseif event == "PLAYER_LOGIN" then
+		LazyPig_CreateOptionsFrame()
 
 		LazyPig_CheckSalvation();
 		LazyPig_AutoSummon();
 		ScheduleFunctionLaunch(LazyPig_ZoneCheck, 6);
-		ScheduleFunctionLaunch(LazyPig_ZoneCheck2, 7);
 
-		if LPCONFIG.CAM then SetCVar("cameraDistanceMax",50) end
+		if LPCONFIG.LOOT then
+			UIPanelWindows["LootFrame"] = nil
+		end
 		QuestRecord["index"] = 0
 
-	elseif (LPCONFIG.SALVA and (event == "PLAYER_AURAS_CHANGED")) then
+	elseif LPCONFIG.SALVA and (event == "PLAYER_AURAS_CHANGED") then
 		LazyPig_CheckSalvation()
 
-	elseif(event == "ZONE_CHANGED_NEW_AREA" or event == "PLAYER_UNGHOST") then
-		if event == "ZONE_CHANGED_NEW_AREA" then
+	elseif event == "ZONE_CHANGED_NEW_AREA" or event == "PLAYER_UNGHOST" then
+		ScheduleFunctionLaunch(LazyPig_ZoneCheck, 5)
+		--DEFAULT_CHAT_FRAME:AddMessage(event);
+
+	elseif event == "UI_ERROR_MESSAGE" then
+		if ErrorStanding[arg1] then
+			SitOrStand()
+		else
+			if LPCONFIG.DISMOUNT then
+				if ErrorDismountAndForm[arg1] then
+					UIErrorsFrame:Clear()
+					LazyPig_Dismount()
+					LazyPig_CancelShapeshiftBuff()
+				end
+			end
+			if LPCONFIG.AUTOSTANCE then
+				LazyPig_AutoStance(arg1)
+			end
 		end
 
-		ScheduleFunctionLaunch(LazyPig_ZoneCheck, 5)
-		ScheduleFunctionLaunch(LazyPig_ZoneCheck, 6)
+	elseif event == "CHAT_MSG_SYSTEM" then
+		if arg1 == CLEARED_DND or arg1 == CLEARED_AFK then
+			afk_active = false
 
-	elseif(event == "QUEST_GREETING") then
-		ActiveQuest = {}
-		AvailableQuest = {}
+		elseif string.find(arg1, string.sub(MARKED_DND, 1, string.len(MARKED_DND) -3)) then
+			afk_active = false
+
+		elseif LPCONFIG.AQUE and string.find(arg1 ,"Queued") and UnitIsPartyLeader("player") then
+			if UnitInRaid("player") then
+				SendChatMessage(arg1, "RAID");
+			elseif GetNumPartyMembers() > 1 then
+				SendChatMessage(arg1, "PARTY");
+			end
+
+		elseif string.find(arg1 ,"completed.") then
+			LazyPig_FixQuest(arg1)
+			QuestRecord["progress"] = nil
+
+		end
+
+	elseif event == "QUEST_GREETING" then
+		ActiveQuest = twipe(ActiveQuest)
+		AvailableQuest = twipe(AvailableQuest)
 		for i=1, GetNumActiveQuests() do
-			ActiveQuest[i] = GetActiveTitle(i).." "..GetActiveLevel(i)
+			table.insert(ActiveQuest, i, GetActiveTitle(i).." "..GetActiveLevel(i))
 		end
 		for i=1, GetNumAvailableQuests() do
-			AvailableQuest[i] = GetAvailableTitle(i).." "..GetAvailableLevel(i)
+			table.insert(AvailableQuest, i, GetAvailableTitle(i).." "..GetAvailableLevel(i))
 		end
 
 		LazyPig_ReplyQuest(event);
@@ -268,8 +294,8 @@ function LazyPig_OnEvent(event)
 		--DEFAULT_CHAT_FRAME:AddMessage("active_: "..table.getn(ActiveQuest))
 		--DEFAULT_CHAT_FRAME:AddMessage("available_: "..table.getn(AvailableQuest))
 
-	elseif(event == "GOSSIP_SHOW") then
-		local GossipOptions = {};
+	elseif event == "GOSSIP_SHOW" then
+		GossipOptions = twipe(GossipOptions)
 		local dsc = nil
 		local gossipnr = nil
 		local gossipbreak = nil
@@ -280,9 +306,9 @@ function LazyPig_OnEvent(event)
 		ActiveQuest = LazyPig_ProcessQuests(GetGossipActiveQuests())
 		AvailableQuest = LazyPig_ProcessQuests(GetGossipAvailableQuests())
 
-		if QuestRecord["qnpc"] ~= UnitName("target") then
+		if QuestRecord["qnpc"] ~= UnitName("npc") then
 			QuestRecord["index"] = 0
-			QuestRecord["qnpc"] = UnitName("target")
+			QuestRecord["qnpc"] = UnitName("npc")
 		end
 
 		if table.getn(AvailableQuest) ~= 0 or table.getn(ActiveQuest) ~= 0 then
@@ -293,7 +319,10 @@ function LazyPig_OnEvent(event)
 		--DEFAULT_CHAT_FRAME:AddMessage("active: "..table.getn(ActiveQuest))
 		--DEFAULT_CHAT_FRAME:AddMessage("available: "..table.getn(AvailableQuest))
 
-		for i=1, getn(GossipOptions) do
+		for i=1, 5 do
+			if not GossipOptions[i] then
+				break
+			end
 			if GossipOptions[i] == "binder" then
 				local bind = GetBindLocation();
 				if not (bind == GetSubZoneText() or bind == GetZoneText() or bind == GetRealZoneText() or bind == GetMinimapZoneText()) then
@@ -301,7 +330,7 @@ function LazyPig_OnEvent(event)
 				end
 			elseif gossipnr then
 				gossipbreak = true
-			elseif (GossipOptions[i] == "trainer" and dsc == "Reset my talents.") then
+			elseif GossipOptions[i] == "trainer" and dsc == "Reset my talents." then
 				gossipbreak = false
 			elseif ((GossipOptions[i] == "trainer" and processgossip)
 					or (GossipOptions[i] == "vendor" and processgossip)
@@ -310,6 +339,9 @@ function LazyPig_OnEvent(event)
 					or (GossipOptions[i] == "petition" and (IsAltKeyDown()or IsShiftKeyDown() or string.find(dsc, "Teleport me to the Molten Core")) and processgossip))
 				then
 				gossipnr = i
+			elseif GossipOptions[i] == "taxi" and processgossip then
+				gossipnr = i
+				LazyPig_Dismount();
 			end
 		end
 
@@ -319,13 +351,19 @@ function LazyPig_OnEvent(event)
 			LazyPig_ReplyQuest(event);
 		end
 
-	elseif(event == "QUEST_PROGRESS" or event == "QUEST_COMPLETE") then
+	elseif event == "QUEST_PROGRESS" or event == "QUEST_COMPLETE" then
 		LazyPig_ReplyQuest(event);
 
-	elseif (event == "CONFIRM_SUMMON") then
+	elseif event == "CONFIRM_SUMMON" then
 		LazyPig_AutoSummon();
 
-	elseif(event == "RESURRECT_REQUEST" and LPCONFIG.REZ) then
+	elseif event == "PARTY_INVITE_REQUEST" then
+		local check1 = not LPCONFIG.DINV or LPCONFIG.DINV
+		local check2 = LPCONFIG.GINV and IsGuildMate(arg1) or LPCONFIG.FINV and IsFriend(arg1) or not IsGuildMate(arg1) and not IsFriend(arg1) and LPCONFIG.SINV
+		if check1 and check2 then
+			AcceptGroupInvite();
+		end
+	elseif event == "RESURRECT_REQUEST" and LPCONFIG.REZ then
 		UIErrorsFrame:AddMessage(arg1.." - Resurrection")
 		TargetByName(arg1, true)
 		if GetCorpseRecoveryDelay() == 0 and (LazyPig_Raid() or LazyPig_Dungeon() or LazyPig_BG()) and UnitIsPlayer("target") and UnitIsVisible("target") and not UnitAffectingCombat("target") then
@@ -344,7 +382,6 @@ function LazyPig_StaticPopup_OnShow()
 		UIErrorsFrame:Clear();
 		UIErrorsFrame:AddMessage("Quest Blocked Successfully");
 		this:Hide();
-
 	else
 		Original_StaticPopup_OnShow();
 	end
@@ -370,8 +407,8 @@ local function LazyPig_ItemUnderCursor()
 		y = y / scale;
 		LootFrame:ClearAllPoints();
 		for index = 1, LOOTFRAME_NUMBUTTONS, 1 do
-			local button = getglobal("LootButton"..index);
-			if( button:IsVisible() ) then
+			local button = _G["LootButton"..index];
+			if  button:IsVisible() then
 				x = x - 42;
 				y = y + 56 + (40 * index);
 				LootFrame:SetPoint("TOPLEFT", "UIParent", "BOTTOMLEFT", x, y);
@@ -395,7 +432,7 @@ end
 
 function LazyPig_LootFrame_OnEvent(event)
 	OriginalLootFrame_OnEvent(event);
-	if(event == "LOOT_SLOT_CLEARED") then
+	if event == "LOOT_SLOT_CLEARED" then
 		LazyPig_ItemUnderCursor();
 	end
 end
@@ -405,32 +442,73 @@ function LazyPig_LootFrame_Update()
 	LazyPig_ItemUnderCursor();
 end
 
-function LazyPig_AutoSummon()
-	local keyenter = IsAltKeyDown() and IsControlKeyDown() and GetTime() > delayaction and GetTime() > (tradedelay + 0.5)
-	if LPCONFIG.SUMM then
-		local expireTime = GetSummonConfirmTimeLeft()
-		if not player_summon_message and expireTime ~= 0 then
-			player_summon_message = true
-			player_summon_confirm = true
-			DEFAULT_CHAT_FRAME:AddMessage("LazyPig: Auto Summon in "..math.floor(expireTime).."s", 1.0, 1.0, 0.0);
-
-		elseif expireTime <= 3 or keyenter then
-			player_summon_confirm = false
-			player_summon_message = false
-
-			for i=1,STATICPOPUP_NUMDIALOGS do
-				local frame = getglobal("StaticPopup"..i)
-				if frame.which == "CONFIRM_SUMMON" and frame:IsShown() then
-					ConfirmSummon();
-					delayaction = GetTime() + 0.75
-					StaticPopup_Hide("CONFIRM_SUMMON");
-				end
-			end
-		elseif expireTime == 0 then
-			player_summon_confirm = false
-			player_summon_message = false
+function IsFriend(name)
+	for i = 1, GetNumFriends() do
+		if GetFriendInfo(i) == name then
+			return true
 		end
 	end
+	return nil
+end
+
+function IsGuildMate(name)
+	if IsInGuild() then
+		for i=1, GetNumGuildMembers() do
+			if strlower(GetGuildRosterInfo(i)) == strlower(name) then
+			  return true
+			end
+		end
+	end
+	return nil
+end
+
+function AcceptGroupInvite()
+	AcceptGroup();
+	StaticPopup_Hide("PARTY_INVITE");
+	UIErrorsFrame:AddMessage("Group Auto Accept");
+end
+
+function LazyPig_AutoSummon()
+	if not LPCONFIG.SUMM then
+		return
+	end
+	local keyenter = IsAltKeyDown() and IsControlKeyDown() and GetTime() > delayaction and GetTime() > (tradedelay + 0.5)
+	local expireTime = GetSummonConfirmTimeLeft()
+	if not player_summon_message and expireTime ~= 0 then
+		player_summon_message = true
+		player_summon_confirm = true
+		DEFAULT_CHAT_FRAME:AddMessage("LazyPig: Auto Summon in "..math.floor(expireTime).."s", 1.0, 1.0, 0.0);
+
+	elseif expireTime <= 3 or keyenter then
+		player_summon_confirm = false
+		player_summon_message = false
+
+		for i=1,STATICPOPUP_NUMDIALOGS do
+			local frame = _G["StaticPopup"..i]
+			if frame.which == "CONFIRM_SUMMON" and frame:IsShown() then
+				ConfirmSummon();
+				delayaction = GetTime() + 0.75
+				StaticPopup_Hide("CONFIRM_SUMMON");
+			end
+		end
+	elseif expireTime == 0 then
+		player_summon_confirm = false
+		player_summon_message = false
+	end
+end
+
+local COLOR_COPPER = "|cffeda55f"
+local COLOR_SILVER = "|cffc7c7cf"
+local COLOR_GOLD = "|cffffd700"
+
+local function MoneyToString(money)
+	if not money then
+		return ""
+	end
+	local gold = floor(abs(money / 10000))
+	local silver = floor(abs(mod(money / 100, 100)))
+	local copper = floor(abs(mod(money, 100)))
+	return COLOR_GOLD..gold.."g|r "..COLOR_SILVER..silver.."s|r "..COLOR_COPPER..copper.."c|r"
 end
 
 function LazyPig_ProcessQuests(...)
@@ -441,13 +519,6 @@ function LazyPig_ProcessQuests(...)
 		quest[count] = title.." "..level
 	end
 	return quest
-end
-
-function LazyPig_PrepareQuestAutoPickup()
-	if IsAltKeyDown() then
-		GossipFrameCloseButton:Click();
-		ClearTarget();
-	end
 end
 
 function LazyPig_SelectGossipActiveQuest(index, norecord)
@@ -531,10 +602,6 @@ function LazyPig_QuestRewardItem_OnClick()
 end
 
 function LazyPig_ReplyQuest(event)
-	if not IsAltKeyDown() then
-		return
-	end
-
 	if QuestRecord["details"] then
 		UIErrorsFrame:Clear();
 		UIErrorsFrame:AddMessage("Replaying: "..QuestRecord["details"])
@@ -602,20 +669,57 @@ function LazyPig_ReplyQuest(event)
 	end
 end
 
+-- taken from ShaguTweaks
+-- https://github.com/shagu/ShaguTweaks/blob/master/mods/auto-dismount.lua
+local dismountStrings = {
+	-- enUS
+	"^Increases speed by (.+)%%",
+	-- turtle-wow
+	"speed based on", "Slow and steady...", "Riding",
+}
+
+function LazyPig_Dismount()
+	local buff = 0
+	while GetPlayerBuff(buff) >= 0 do
+		LazyPig_Buff_Tooltip:SetPlayerBuff(GetPlayerBuff(buff))
+		local desc = LazyPig_Buff_TooltipTextLeft2:GetText()
+		if desc then
+			for _, str in pairs(dismountStrings) do
+				if string.find(desc, str) then
+					CancelPlayerBuff(buff)
+					return
+				end
+			end
+		end
+		buff = buff + 1
+	end
+end
+
+local stanceString = string.gsub(SPELL_FAILED_ONLY_SHAPESHIFT, "%%s", "(.+)")
+local stances = {}
+
+function LazyPig_AutoStance(msg)
+	for stancesStr in string.gfind(msg, stanceString) do
+		for _, st in pairs(strsplit(stancesStr, ",", stances)) do
+			CastSpellByName((string.gsub(st, "^%s*(.-)%s*$", "%1")))
+		end
+	end
+end
+
 function LazyPig_ItemIsTradeable(bag, item)
 	for i = 1, 29, 1 do
-		getglobal("LazyPig_Buff_TooltipTextLeft" .. i):SetText("");
+		_G["LazyPig_Buff_TooltipTextLeft" .. i]:SetText("");
 	end
 
 	LazyPig_Buff_Tooltip:SetBagItem(bag, item);
 
 	for i = 1, LazyPig_Buff_Tooltip:NumLines(), 1 do
-		local text = getglobal("LazyPig_Buff_TooltipTextLeft" .. i):GetText();
-		if ( text == ITEM_SOULBOUND ) then
+		local text = _G["LazyPig_Buff_TooltipTextLeft" .. i]:GetText();
+		if  text == ITEM_SOULBOUND  then
 			return nil
-		elseif ( text == ITEM_BIND_QUEST ) then
+		elseif  text == ITEM_BIND_QUEST  then
 			return nil
-		elseif ( text == ITEM_CONJURED ) then
+		elseif  text == ITEM_CONJURED  then
 			return nil
 		end
 	end
@@ -637,360 +741,12 @@ function LazyPig_BG()
 	return inInstance and instanceType == "pvp"
 end
 
-function LazyPig_SetItemRef_OnEvent(link, text, button)
-	if link and string.find(link, "lazypig:") then
-		--local count = string.gsub(link,"lazypig:","")
-		LazyPig_Command()
-	else
-		Original_SetItemRef(link, text, button)
-	end
-end
-
-function LazyPig_GetOption(num)
-	local labelString = getglobal(this:GetName().."Text");
-	local label = LazyPigMenuStrings[num] or "";
-	LazyPigMenuObjects[num] = this
-
-	if num == 00 and LPCONFIG.GREEN == 1
-	or num == 01 and LPCONFIG.GREEN == 2
-	or num == 02 and LPCONFIG.GREEN == 0
-	or num == 03 and LPCONFIG.ZG == 1
-	or num == 04 and LPCONFIG.ZG == 2
-	or num == 05 and LPCONFIG.ZG == 0
-	or num == 06 and LPCONFIG.MC == 1
-	or num == 07 and LPCONFIG.MC == 2
-	or num == 08 and LPCONFIG.MC == 0
-	or num == 09 and LPCONFIG.AQ == 1
-	or num == 10 and LPCONFIG.AQ == 2
-	or num == 11 and LPCONFIG.AQ == 0
-	or num == 12 and LPCONFIG.AQMOUNT == 1
-	or num == 13 and LPCONFIG.AQMOUNT == 2
-	or num == 14 and LPCONFIG.AQMOUNT == 0
-	or num == 15 and LPCONFIG.SAND == 1
-	or num == 16 and LPCONFIG.SAND == 2
-	or num == 17 and LPCONFIG.SAND == 0
-	or num == 18 and LPCONFIG.NAXX == 1
-	or num == 19 and LPCONFIG.NAXX == 2
-	or num == 20 and LPCONFIG.NAXX == 0
-	or num == 21 and LPCONFIG.ROLLMSG
-	or num == 22 and LPCONFIG.WORLDDUNGEON
-	or num == 23 and LPCONFIG.WORLDRAID
-	or num == 24 and LPCONFIG.WORLDBG
-	or num == 25 and LPCONFIG.WORLDUNCHECK
-	or num == 26 and LPCONFIG.BWL == 1
-	or num == 27 and LPCONFIG.BWL == 2
-	or num == 28 and LPCONFIG.BWL == 0
-	or num == 30 and LPCONFIG.GINV
-	or num == 31 and LPCONFIG.FINV
-	or num == 32 and LPCONFIG.SINV
-	or num == 33 and LPCONFIG.DINV
-	or num == 40 and LPCONFIG.FPLATE
-	or num == 41 and LPCONFIG.EPLATE
-	or num == 42 and LPCONFIG.HPLATE
-	or num == 50 and LPCONFIG.EBG
-	or num == 51 and LPCONFIG.LBG
-	or num == 52 and LPCONFIG.QBG
-	or num == 53 and LPCONFIG.RBG
-	or num == 54 and LPCONFIG.AQUE
-	or num == 55 and LPCONFIG.SBG
-
-	or num == 60 and LPCONFIG.SALVA == 1
-	or num == 61 and LPCONFIG.SALVA == 2
-
-	or num == 62 and LPCONFIG.REMOVEMANABUFFS == 1
-
-	or num == 63 and LPCONFIG.ASPECT
-
-	or num == 90 and LPCONFIG.SUMM
-
-	or num == 70 and LPCONFIG.SPAM
-	or num == 71 and LPCONFIG.SPAM_UNCOMMON
-	or num == 72 and LPCONFIG.SPAM_RARE
-	or num == 73 and LPCONFIG.SPAM_LOOT
-
-	or num == 91 and LPCONFIG.LOOT
-	or num == 92 and LPCONFIG.RIGHT
-	or num == 93 and LPCONFIG.SHIFTSPLIT
-	or num == 94 and LPCONFIG.CAM
-	or num == 95 and LPCONFIG.SPECIALKEY
-	or num == 96 and LPCONFIG.DUEL
-	or num == 97 and LPCONFIG.REZ
-	or num == 98 and LPCONFIG.GOSSIP
-	or num == 100 and LPCONFIG.DISMOUNT
-	or num == 101 and LPCONFIG.SPAM
-	or num == 102 and LPCONFIG.WHITE_TAILORING == 1
-	or num == 103 and LPCONFIG.WHITE_TAILORING == 2
-	or num == 104 and LPCONFIG.WHITE_TAILORING == 0
-	or num == 105 and LPCONFIG.FOOD_AND_DRINK == 1
-	or num == 106 and LPCONFIG.FOOD_AND_DRINK == 2
-	or num == 107 and LPCONFIG.FOOD_AND_DRINK == 0
-	or num == 108 and LPCONFIG.ES_SHARDS == 1
-	or num == 109 and LPCONFIG.ES_SHARDS == 2
-	or num == 110 and LPCONFIG.ES_SHARDS == 0
-
-	or nil then
-		this:SetChecked(true);
-	else
-		this:SetChecked(nil);
-	end
-	labelString:SetText(label);
-end
-
-function LazyPig_SetOption(num)
-	local checked = this:GetChecked()
-	if num == 00 then
-		LPCONFIG.GREEN = 1
-		if not checked then LPCONFIG.GREEN = nil end
-	elseif num == 01 then
-		LPCONFIG.GREEN = 2
-		if not checked then LPCONFIG.GREEN = nil end
-	elseif num == 02 then
-		LPCONFIG.GREEN = 0
-		if not checked then LPCONFIG.GREEN = nil end
-	elseif num == 03 then
-		LPCONFIG.ZG = 1
-		if not checked then LPCONFIG.ZG = nil end
-	elseif num == 04 then
-		LPCONFIG.ZG = 2
-		if not checked then LPCONFIG.ZG = nil end
-	elseif num == 05 then
-		LPCONFIG.ZG = 0
-		if not checked then LPCONFIG.ZG = nil end
-	elseif num == 06 then
-		LPCONFIG.MC = 1
-		if not checked then LPCONFIG.MC = nil end
-	elseif num == 07 then
-		LPCONFIG.MC = 2
-		if not checked then LPCONFIG.MC = nil end
-	elseif num == 08 then
-		LPCONFIG.MC = 0
-		if not checked then LPCONFIG.MC = nil end
-	elseif num == 09 then
-		LPCONFIG.AQ = 1
-		if not checked then LPCONFIG.AQ = nil end
-	elseif num == 10 then
-		LPCONFIG.AQ = 2
-		if not checked then LPCONFIG.AQ = nil end
-	elseif num == 11 then
-		LPCONFIG.AQ = 0
-		if not checked then LPCONFIG.AQ = nil end
-	elseif num == 12 then
-		LPCONFIG.AQMOUNT = 1
-		if not checked then LPCONFIG.AQMOUNT = nil end
-	elseif num == 13 then
-		LPCONFIG.AQMOUNT = 2
-		if not checked then LPCONFIG.AQMOUNT = nil end
-	elseif num == 14 then
-		LPCONFIG.AQMOUNT = 0
-		if not checked then LPCONFIG.AQMOUNT = nil end
-	elseif num == 15 then
-		LPCONFIG.SAND = 1
-		if not checked then LPCONFIG.SAND = nil end
-	elseif num == 16 then
-		LPCONFIG.SAND = 2
-		if not checked then LPCONFIG.SAND = nil end
-	elseif num == 17 then
-		LPCONFIG.SAND = 0
-		if not checked then LPCONFIG.SAND = nil end
-	elseif num == 18 then
-		LPCONFIG.NAXX = 1
-		if not checked then LPCONFIG.NAXX = nil end
-	elseif num == 19 then
-		LPCONFIG.NAXX = 2
-		if not checked then LPCONFIG.NAXX = nil end
-	elseif num == 20 then
-		LPCONFIG.NAXX = 0
-		if not checked then LPCONFIG.NAXX = nil end
-	elseif num == 21 then
-		LPCONFIG.ROLLMSG = true
-		if not checked then LPCONFIG.ROLLMSG = nil end
-	elseif num == 22 then
-		LPCONFIG.WORLDDUNGEON = true					--fixed
-		if not checked then LPCONFIG.WORLDDUNGEON = nil end
-		if LPCONFIG.WORLDDUNGEON or LPCONFIG.WORLDRAID or LPCONFIG.WORLDBG then
-			LPCONFIG.WORLDUNCHECK = nil
-			LazyPigMenuObjects[25]:SetChecked(nil)
-		end
-		LazyPig_ZoneCheck()
-	elseif num == 23 then
-		LPCONFIG.WORLDRAID = true
-		if not checked then LPCONFIG.WORLDRAID = nil end
-		if LPCONFIG.WORLDDUNGEON or LPCONFIG.WORLDRAID or LPCONFIG.WORLDBG then
-			LPCONFIG.WORLDUNCHECK = nil
-			LazyPigMenuObjects[25]:SetChecked(nil)
-		end
-		LazyPig_ZoneCheck()
-	elseif num == 24 then
-		LPCONFIG.WORLDBG = true
-		if not checked then LPCONFIG.WORLDBG = nil end
-		if LPCONFIG.WORLDDUNGEON or LPCONFIG.WORLDRAID or LPCONFIG.WORLDBG then
-			LPCONFIG.WORLDUNCHECK = nil
-			LazyPigMenuObjects[25]:SetChecked(nil)
-		end
-		LazyPig_ZoneCheck()
-	elseif num == 25 then
-		LPCONFIG.WORLDUNCHECK = true
-		if not checked then
-			LPCONFIG.WORLDUNCHECK = nil
-		else
-			LPCONFIG.WORLDDUNGEON = nil
-			LPCONFIG.WORLDRAID = nil
-			LPCONFIG.WORLDBG = nil
-
-
-			LazyPigMenuObjects[22]:SetChecked(nil)
-			LazyPigMenuObjects[23]:SetChecked(nil)
-			LazyPigMenuObjects[24]:SetChecked(nil)
-		end
-		LazyPig_ZoneCheck()
-	elseif num == 26 then
-		LPCONFIG.BWL = 1
-		if not checked then LPCONFIG.BWL = nil end
-	elseif num == 27 then
-		LPCONFIG.BWL = 2
-		if not checked then LPCONFIG.BWL = nil end
-	elseif num == 28 then
-		LPCONFIG.BWL = 0
-		if not checked then LPCONFIG.BWL = nil end
-	elseif num == 30 then 								--fixed
-		LPCONFIG.GINV = true
-		if not checked then LPCONFIG.GINV = nil end
-	elseif num == 31 then
-		LPCONFIG.FINV = true
-		if not checked then LPCONFIG.FINV = nil end
-	elseif num == 32 then
-		LPCONFIG.SINV = true
-		if not checked then LPCONFIG.SINV = nil end
-	elseif num == 33 then
-		LPCONFIG.DINV = true
-		if not checked then LPCONFIG.DINV = nil end
-	elseif num == 40 then 								--fixed
-		LPCONFIG.FPLATE = true
-		if not checked then LPCONFIG.FPLATE = nil end
-	elseif num == 41 then
-		LPCONFIG.EPLATE = true
-		if not checked then LPCONFIG.EPLATE = nil end
-	elseif num == 42 then
-		LPCONFIG.HPLATE = true
-	elseif num == 50 then --fixed
-		LPCONFIG.EBG = true
-		if not checked then LPCONFIG.EBG = nil end
-	elseif num == 51 then
-		LPCONFIG.LBG = true
-		if not checked then LPCONFIG.LBG = nil end
-	elseif num == 52 then
-		LPCONFIG.QBG = true
-		if not checked then LPCONFIG.QBG = nil end
-	elseif num == 53 then
-		LPCONFIG.RBG = true
-		if not checked then LPCONFIG.RBG = nil end
-	elseif num == 54 then
-		LPCONFIG.AQUE = true
-		if not checked then LPCONFIG.AQUE = nil end
-	elseif num == 55 then
-		LPCONFIG.SBG  = true
-		if not checked then LPCONFIG.SBG  = nil end
-	elseif num == 60 then
-		LPCONFIG.SALVA = 1
-		if not checked then LPCONFIG.SALVA = nil end
-		LazyPigMenuObjects[61]:SetChecked(nil)
-		LazyPig_CheckSalvation()
-	elseif num == 61 then
-		LPCONFIG.SALVA = 2
-		if not checked then LPCONFIG.SALVA = nil end
-		LazyPigMenuObjects[60]:SetChecked(nil)
-		LazyPig_CheckSalvation()
-	elseif num == 62 then
-		LPCONFIG.REMOVEMANABUFFS = 1
-		if not checked then LPCONFIG.REMOVEMANABUFFS = nil end
-	elseif num == 63 then
-		LPCONFIG.ASPECT = true
-		if not checked then LPCONFIG.ASPECT = nil end
-	elseif num == 70 then --fixed
-		LPCONFIG.SPAM = true
-		if not checked then LPCONFIG.SPAM = nil end
-	elseif num == 71 then
-		LPCONFIG.SPAM_UNCOMMON = true
-		if not checked then LPCONFIG.SPAM_UNCOMMON = nil end
-	elseif num == 72 then
-		LPCONFIG.SPAM_RARE	 = true
-		if not checked then LPCONFIG.SPAM_RARE	 = nil end
-	elseif num == 73 then
-		LPCONFIG.SPAM_LOOT	 = true
-		if not checked then LPCONFIG.SPAM_LOOT	 = nil end
-	elseif num == 90 then
-		LPCONFIG.SUMM = true
-		if not checked then LPCONFIG.SUMM = nil end
-	elseif num == 91 then
-		LPCONFIG.LOOT = true
-		if not checked then LPCONFIG.LOOT = nil end
-	elseif num == 92 then
-		LPCONFIG.RIGHT = true
-		if not checked then LPCONFIG.RIGHT = nil end
-	elseif num == 93 then--fixed
-		LPCONFIG.SHIFTSPLIT = true
-		if not checked then LPCONFIG.SHIFTSPLIT = nil end
-	elseif num == 94 then--fixed
-		LPCONFIG.CAM = true
-		if not checked then LPCONFIG.CAM = nil end
-		if LPCONFIG.CAM then SetCVar("cameraDistanceMax",50) else SetCVar("cameraDistanceMaxFactor",1) SetCVar("cameraDistanceMax",15) end
-	elseif num == 95 then
-		LPCONFIG.SPECIALKEY = true
-		if not checked then LPCONFIG.SPECIALKEY = nil end
-	elseif num == 96 then
-		LPCONFIG.DUEL = true
-		if not checked then LPCONFIG.DUEL = nil end
-	elseif num == 97 then
-		LPCONFIG.REZ = true
-		if not checked then LPCONFIG.REZ = nil end
-	elseif num == 98 then
-		LPCONFIG.GOSSIP = true
-		if not checked then LPCONFIG.GOSSIP = nil end
-	elseif num == 100 then
-		LPCONFIG.DISMOUNT = true
-		if not checked then LPCONFIG.DISMOUNT = nil end
-	elseif num == 101 then
-		LPCONFIG.SPAM  = true
-		if not checked then LPCONFIG.SPAM  = nil end
-	elseif num == 102 then
-		LPCONFIG.WHITE_TAILORING = 1
-		if not checked then LPCONFIG.WHITE_TAILORING = nil end
-	elseif num == 103 then
-		LPCONFIG.WHITE_TAILORING = 2
-		if not checked then LPCONFIG.WHITE_TAILORING = nil end
-	elseif num == 104 then
-		LPCONFIG.WHITE_TAILORING = 0
-		if not checked then LPCONFIG.WHITE_TAILORING = nil end
-	elseif num == 105 then
-		LPCONFIG.FOOD_AND_DRINK = 1
-		if not checked then LPCONFIG.FOOD_AND_DRINK = nil end
-	elseif num == 106 then
-		LPCONFIG.FOOD_AND_DRINK = 2
-		if not checked then LPCONFIG.FOOD_AND_DRINK = nil end
-	elseif num == 107 then
-		LPCONFIG.FOOD_AND_DRINK = 0
-		if not checked then LPCONFIG.FOOD_AND_DRINK = nil end
-	elseif num == 108 then
-		LPCONFIG.ES_SHARDS = 1
-		if not checked then LPCONFIG.ES_SHARDS = nil end
-	elseif num == 109 then
-		LPCONFIG.ES_SHARDS = 2
-		if not checked then LPCONFIG.ES_SHARDS = nil end
-	elseif num == 110 then
-		LPCONFIG.ES_SHARDS = 0
-		if not checked then LPCONFIG.ES_SHARDS = nil end
-	else
-		--DEFAULT_CHAT_FRAME:AddMessage("DEBUG: No num assigned - "..num)
-	end
-	--DEFAULT_CHAT_FRAME:AddMessage("DEBUG: Num chosen - "..num)
-end
-
-function LazyPig_RollLootOpen()
-	for i=1,STATICPOPUP_NUMDIALOGS do
-		local frame = getglobal("StaticPopup"..i)
-		if frame:IsShown() and frame.which == "CONFIRM_LOOT_ROLL" then
-			--DEFAULT_CHAT_FRAME:AddMessage("LazyPig_RollLootOpen - TRUE")
-			return true
+function LazyPig_DecodeItemLink(link)
+	if link then
+		local found, _, id, name = string.find(link, "item:(%d+):.*%[(.*)%]")
+		if found then
+			id = tonumber(id)
+			return name, id
 		end
 	end
 	return nil
@@ -998,7 +754,7 @@ end
 
 function LazyPig_BindLootOpen()
 	for i=1,STATICPOPUP_NUMDIALOGS do
-		local frame = getglobal("StaticPopup"..i)
+		local frame = _G["StaticPopup"..i]
 		if frame:IsShown() and frame.which == "LOOT_BIND" then
 			--DEFAULT_CHAT_FRAME:AddMessage("LazyPig_BindLootOpen - TRUE")
 			return true
@@ -1007,13 +763,9 @@ function LazyPig_BindLootOpen()
 	return nil
 end
 
-function LazyPig_ZoneCheck2()
-	LazyPig_ZoneCheck()
-end
-
 local process = function(ChatFrame, name)
     for index, value in ChatFrame.channelList do
-        if (strupper(name) == strupper(value)) then
+        if strupper(name) == strupper(value) then
             return true
         end
     end
@@ -1023,7 +775,7 @@ end
 function LazyPig_ZoneCheck()
 	local leavechat = LPCONFIG.WORLDRAID and LazyPig_Raid() or LPCONFIG.WORLDDUNGEON and LazyPig_Dungeon() or LPCONFIG.WORLDBG and LazyPig_BG() or LPCONFIG.WORLDUNCHECK
 	for i = 1, NUM_CHAT_WINDOWS do
-		local ChatFrame = getglobal("ChatFrame"..i)
+		local ChatFrame = _G["ChatFrame"..i]
 		if ChatFrame:IsVisible() and not UnitIsDeadOrGhost("player") then
 			local id, name = GetChannelName("world")
 			if id > 0 then
@@ -1069,30 +821,46 @@ function LazyPig_PlayerClass(class, unit)
 	return false
 end
 
-local salvationbuffs = {"Spell_Holy_SealOfSalvation", "Spell_Holy_GreaterBlessingofSalvation"}
+function LazyPig_CancelShapeshiftBuff()
+	for i = 1, GetNumShapeshiftForms() do
+		local _, _, isActive = GetShapeshiftFormInfo(i);
+		if isActive and LazyPig_PlayerClass("Druid", "player") then
+			CastShapeshiftForm(i)
+			return
+		end
+	end
+end
+
+local salvationbuffs = {
+	"Spell_Holy_SealOfSalvation",
+	"Spell_Holy_GreaterBlessingofSalvation"
+}
 function LazyPig_CheckSalvation()
-	if(LPCONFIG.SALVA == 1 or (LPCONFIG.SALVA == 2 and LazyPig_HasRighteousFury())) then
-		local counter = 0
-		while GetPlayerBuff(counter) >= 0 do
-			local index, untilCancelled = GetPlayerBuff(counter)
-			if untilCancelled ~= 1 then
-				local texture = GetPlayerBuffTexture(index)
-				if texture then  -- Check if texture is not nil
-					local i = 1
-						while salvationbuffs[i] do
-							if string.find(texture, salvationbuffs[i]) then
-							CancelPlayerBuff(index);
-							UIErrorsFrame:Clear();
-							UIErrorsFrame:AddMessage("Salvation Removed");
-							return
-						end
-						i = i + 1
+	if not LPCONFIG.SALVA then
+		return
+	end
+	if not (LPCONFIG.SALVA == 1 or (LPCONFIG.SALVA == 2 and LazyPig_HasRighteousFury())) then
+		return
+	end
+	local counter = 0
+	while GetPlayerBuff(counter) >= 0 do
+		local index, untilCancelled = GetPlayerBuff(counter)
+		if untilCancelled ~= 1 then
+			local texture = GetPlayerBuffTexture(index)
+			if texture then  -- Check if texture is not nil
+				local i = 1
+					while salvationbuffs[i] do
+						if string.find(texture, salvationbuffs[i]) then
+						CancelPlayerBuff(index);
+						UIErrorsFrame:Clear();
+						UIErrorsFrame:AddMessage("Salvation Removed");
+						return
 					end
+					i = i + 1
 				end
 			end
-			counter = counter + 1
 		end
-		return nil
+		counter = counter + 1
 	end
 end
 
@@ -1119,7 +887,7 @@ function LazyPig_ChatFrame_OnEvent(event)
 		end
 	end
 
-	if LPCONFIG.SPAM and arg2 and arg2 ~= GetUnitName("player") and (event == "CHAT_MSG_SAY" or event == "CHAT_MSG_CHANNEL" or event == "CHAT_MSG_YELL" or event == "CHAT_MSG_EMOTE") then
+	if LPCONFIG.SPAM and arg2 and arg2 ~= GetUnitName("player") and (event == "CHAT_MSG_SAY" or event == "CHAT_MSG_CHANNEL" or event == "CHAT_MSG_YELL" or event == "CHAT_MSG_EMOTE" and not (IsGuildMate(arg2) or IsFriend(arg2))) then
 		local time = GetTime()
 		local index = ChatMessage["INDEX"]
 
@@ -1131,6 +899,16 @@ function LazyPig_ChatFrame_OnEvent(event)
 			end
 		end
 		ChatMessage[index][arg1] = time
+	end
+
+    -- suppress BigWigs spam
+	if LPCONFIG.SPAM and event == "CHAT_MSG_SAY" and string.find(arg1 or "" ,"^Casted %u[%a%s]+ on %u[%a%s]+") then
+        return
+    end
+
+	-- supress #showtooltip spam
+	if string.find(arg1 or "" , "^#showtooltip") then
+		return
 	end
 
 	Original_ChatFrame_OnEvent(event);
@@ -1152,7 +930,7 @@ function ChatSpamClean()
 			ChatMessage[newindex][blockindex] = ChatMessage[index][blockindex]
 		end
 	end
-	ChatMessage[index] = {}
+	ChatMessage[index] = twipe(ChatMessage[index])
 	ChatMessage["INDEX"] = newindex
 
 	--DEFAULT_CHAT_FRAME:AddMessage("ChatSpamClean")

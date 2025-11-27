@@ -2,40 +2,44 @@ local _G = _G or getfenv(0)
 
 -- Default SavedVariables
 LPCONFIG = {}
-LPCONFIG.DISMOUNT = true           -- Auto Dismount
-LPCONFIG.AUTOSTANCE = true         -- Auto Stance
-LPCONFIG.CAM = false               -- Extended camera distance
-LPCONFIG.GINV = true               -- Auto accept invites from guild members
-LPCONFIG.FINV = true               -- Auto accept invites from friends
-LPCONFIG.SINV = false              -- Auto accept invites from strangers
+LPCONFIG.DISMOUNT = false           -- Auto Dismount
+LPCONFIG.AUTOSTANCE = false         -- Auto Stance
+LPCONFIG.CAM = false                -- Extended camera distance
+LPCONFIG.GINV = false               -- Auto accept invites from guild members
+LPCONFIG.FINV = false               -- Auto accept invites from friends
+LPCONFIG.SINV = false               -- Auto accept invites from strangers
 LPCONFIG.DINV = false               -- Disable auto accept invite whiel in bg or in bg queue
-LPCONFIG.SUMM = false              -- Auto accept summons
+LPCONFIG.SUMM = false               -- Auto accept summons
 LPCONFIG.EBG = false                -- Auto join battleground
 LPCONFIG.LBG = false                -- Auto leave battleground
 LPCONFIG.QBG = false                -- Auto queue battleground
 LPCONFIG.RBG = false                -- Auto release spirit in battleground
-LPCONFIG.SBG = false               -- Auto decline quest sharing while in battleground
-LPCONFIG.AQUE = false              -- Announce when queueing for battleground as party leader
-LPCONFIG.LOOT = false              -- Position loot frame at cursor
+LPCONFIG.SBG = false                -- Auto decline quest sharing while in battleground
+LPCONFIG.AQUE = false               -- Announce when queueing for battleground as party leader
+LPCONFIG.LOOT = false               -- Position loot frame at cursor
 LPCONFIG.RIGHT = false              -- Improved right click
-LPCONFIG.GREEN = nil               -- [number or nil] Auto roll on green items
-LPCONFIG.ZG = nil                  -- [number or nil] ZG coins/bijou auto roll
-LPCONFIG.MC = nil                  -- [number or nil] MC mats auto roll
-LPCONFIG.AQ = nil                  -- [number or nil] AQ scarabs/idols auto roll
-LPCONFIG.SAND = nil                -- [number or nil] Corrupted sand auto roll
-LPCONFIG.ES_SHARDS = nil           -- [number or nil] Dream Shrads auto roll
-LPCONFIG.ROLLMSG = false           -- Lazy Pig Auto Roll Messages
-LPCONFIG.WORLDDUNGEON = false      -- Mute Wolrd chat while in dungeons
-LPCONFIG.WORLDRAID = false         -- Mute Wolrd chat while in raid
-LPCONFIG.WORLDBG = false           -- Mute Wolrd chat while in battleground
-LPCONFIG.WORLDUNCHECK = false      -- Mute Wolrd chat always
-LPCONFIG.SPAM = false              -- Hide players spam messages
-LPCONFIG.SPAM_UNCOMMON = false     -- Hide green items roll messages
-LPCONFIG.SPAM_RARE = false         -- Hide blue items roll messages
-LPCONFIG.SHIFTSPLIT = false        -- Improved stack splitting with shift
-LPCONFIG.REZ = false               -- Auto accept resurrection while in raid, dungeon or bg if resurrecter is out of combat
+LPCONFIG.GREEN = nil                -- [number or nil] Auto roll on green items
+LPCONFIG.ZG = nil                   -- [number or nil] ZG coins/bijou auto roll
+LPCONFIG.MC = nil                   -- [number or nil] MC mats auto roll
+LPCONFIG.AQ = nil                   -- [number or nil] AQ scarabs/idols auto roll
+LPCONFIG.SAND = nil                 -- [number or nil] Corrupted sand auto roll
+LPCONFIG.ES_SHARDS = nil            -- [number or nil] Dream Shrads auto roll
+LPCONFIG.NAXX = nil                 -- [number or nil] Scraps auto roll
+LPCONFIG.ROLLMSG = false            -- Lazy Pig Auto Roll Messages
+LPCONFIG.DUEL = false               -- Auto cancel duels
+LPCONFIG.SPECIALKEY = false         -- Special key combinations
+LPCONFIG.WORLDDUNGEON = false       -- Mute Wolrd chat while in dungeons
+LPCONFIG.WORLDRAID = false          -- Mute Wolrd chat while in raid
+LPCONFIG.WORLDBG = false            -- Mute Wolrd chat while in battleground
+LPCONFIG.WORLDUNCHECK = false       -- Mute Wolrd chat always
+LPCONFIG.SPAM = false               -- Hide players spam messages
+LPCONFIG.SPAM_UNCOMMON = false      -- Hide green items roll messages
+LPCONFIG.SPAM_RARE = false          -- Hide blue items roll messages
+LPCONFIG.SHIFTSPLIT = false         -- Improved stack splitting with shift
+LPCONFIG.REZ = false                -- Auto accept resurrection while in raid, dungeon or bg if resurrecter is out of combat
 LPCONFIG.GOSSIP = false             -- Auto proccess gossip
-LPCONFIG.SALVA = nil               -- [number or nil] Autoremove Blessing of Salvation
+LPCONFIG.SALVA = nil                -- [number or nil] Autoremove Blessing of Salvation
+LPCONFIG.REMOVEMANABUFFS = false    -- Autoremove Blessing of Wisdom, Arcane Intellect, Prayer of Spirit
 
 local Original_SelectGossipActiveQuest = SelectGossipActiveQuest;
 local Original_SelectGossipAvailableQuest = SelectGossipAvailableQuest;
@@ -58,6 +62,9 @@ local passpopup = 0
 local ctrltime = 0
 local alttime = 0
 local shift_time = 0
+local ctrlalttime = 0
+local ctrlshifttime = 0
+local altshifttime = 0
 local greenrolltime = 0
 
 local timer_split = nil
@@ -66,14 +73,25 @@ local player_summon_message = nil
 local player_bg_confirm = nil
 local player_bg_message = nil
 local afk_active = nil
+local duel_active = nil
+local merchantstatus = nil
+local tradestatus = nil
+local mailstatus = nil
+local auctionstatus = nil
+local auctionbrowse = nil
+local bankstatus = nil
 local channelstatus = nil
 local battleframe = nil
+local wsgefc = nil
 
+local ScheduleButton = {}
 local ScheduleFunction = {}
 local QuestRecord = {}
 local ActiveQuest = {}
 local AvailableQuest = {}
 local ChatMessage = {{}, {}, INDEX = 1}
+local ScheduleSplit = {}
+local ScheduleSplitCount = {}
 local GossipOptions = {}
 
 local function twipe(t)
@@ -218,15 +236,14 @@ local ErrorStanding = {
 }
 
 function LazyPig_OnEvent(event)
-	if event == "ADDON_LOADED" and arg1 == "_LazyPig" then
+	if event == "ADDON_LOADED" and arg1 == "LazyPig" then
 		this:UnregisterEvent("ADDON_LOADED")
-		local title = GetAddOnMetadata("_LazyPig", "Title")
-		local version = GetAddOnMetadata("_LazyPig", "Version")
+		local title = GetAddOnMetadata("LazyPig", "Title")
+		local version = GetAddOnMetadata("LazyPig", "Version")
 		DEFAULT_CHAT_FRAME:AddMessage(title.." v"..version.."|cffffffff".." loaded, type".."|cff00eeee".." /lp".."|cffffffff for options")
 
 	elseif event == "PLAYER_LOGIN" then
 		LazyPig_CreateOptionsFrame()
-
 		LazyPig_CheckSalvation();
 		LazyPig_AutoSummon();
 		ScheduleFunctionLaunch(LazyPig_ZoneCheck, 6);
@@ -236,12 +253,11 @@ function LazyPig_OnEvent(event)
 		end
 		QuestRecord["index"] = 0
 
-	elseif LPCONFIG.SALVA and (event == "PLAYER_AURAS_CHANGED") then
+	elseif event == "PLAYER_AURAS_CHANGED" then
 		LazyPig_CheckSalvation()
 
 	elseif event == "ZONE_CHANGED_NEW_AREA" or event == "PLAYER_UNGHOST" then
 		ScheduleFunctionLaunch(LazyPig_ZoneCheck, 5)
-		--DEFAULT_CHAT_FRAME:AddMessage(event);
 
 	elseif event == "UI_ERROR_MESSAGE" then
 		if ErrorStanding[arg1] then
@@ -254,9 +270,6 @@ function LazyPig_OnEvent(event)
 					LazyPig_CancelShapeshiftBuff()
 				end
 			end
-			if LPCONFIG.AUTOSTANCE then
-				LazyPig_AutoStance(arg1)
-			end
 		end
 
 	elseif event == "CHAT_MSG_SYSTEM" then
@@ -266,17 +279,14 @@ function LazyPig_OnEvent(event)
 		elseif string.find(arg1, string.sub(MARKED_DND, 1, string.len(MARKED_DND) -3)) then
 			afk_active = false
 
-		elseif LPCONFIG.AQUE and string.find(arg1 ,"Queued") and UnitIsPartyLeader("player") then
-			if UnitInRaid("player") then
-				SendChatMessage(arg1, "RAID");
-			elseif GetNumPartyMembers() > 1 then
-				SendChatMessage(arg1, "PARTY");
-			end
-
 		elseif string.find(arg1 ,"completed.") then
 			LazyPig_FixQuest(arg1)
 			QuestRecord["progress"] = nil
 
+		elseif string.find(arg1 ,"Duel starting:") or string.find(arg1 ,"requested a duel") then
+			duel_active = true
+		elseif string.find(arg1 ,"in a duel") then
+			duel_active = nil
 		end
 
 	elseif event == "QUEST_GREETING" then
@@ -334,6 +344,7 @@ function LazyPig_OnEvent(event)
 				gossipbreak = false
 			elseif ((GossipOptions[i] == "trainer" and processgossip)
 					or (GossipOptions[i] == "vendor" and processgossip)
+					or (GossipOptions[i] == "battlemaster" and processgossip)
 					or (GossipOptions[i] == "gossip" and processgossip)
 					or (GossipOptions[i] == "banker" and string.find(dsc, "^I would like to check my deposit box.") and processgossip)
 					or (GossipOptions[i] == "petition" and (IsAltKeyDown()or IsShiftKeyDown() or string.find(dsc, "Teleport me to the Molten Core")) and processgossip))
@@ -358,7 +369,7 @@ function LazyPig_OnEvent(event)
 		LazyPig_AutoSummon();
 
 	elseif event == "PARTY_INVITE_REQUEST" then
-		local check1 = not LPCONFIG.DINV or LPCONFIG.DINV
+		local check1 = not LPCONFIG.DINV or LPCONFIG.DINV and not LazyPig_BG()
 		local check2 = LPCONFIG.GINV and IsGuildMate(arg1) or LPCONFIG.FINV and IsFriend(arg1) or not IsGuildMate(arg1) and not IsFriend(arg1) and LPCONFIG.SINV
 		if check1 and check2 then
 			AcceptGroupInvite();
@@ -375,16 +386,6 @@ function LazyPig_OnEvent(event)
 		TargetLastTarget();
 	end
 	--DEFAULT_CHAT_FRAME:AddMessage(event);
-end
-
-function LazyPig_StaticPopup_OnShow()
-	if this.which == "QUEST_ACCEPT" and LazyPig_BG() and LPCONFIG.SBG then
-		UIErrorsFrame:Clear();
-		UIErrorsFrame:AddMessage("Quest Blocked Successfully");
-		this:Hide();
-	else
-		Original_StaticPopup_OnShow();
-	end
 end
 
 function LazyPig_Text(txt)
@@ -602,6 +603,10 @@ function LazyPig_QuestRewardItem_OnClick()
 end
 
 function LazyPig_ReplyQuest(event)
+	if not IsAltKeyDown() then
+		return
+	end
+
 	if QuestRecord["details"] then
 		UIErrorsFrame:Clear();
 		UIErrorsFrame:AddMessage("Replaying: "..QuestRecord["details"])
@@ -669,8 +674,6 @@ function LazyPig_ReplyQuest(event)
 	end
 end
 
--- taken from ShaguTweaks
--- https://github.com/shagu/ShaguTweaks/blob/master/mods/auto-dismount.lua
 local dismountStrings = {
 	-- enUS
 	"^Increases speed by (.+)%%",
@@ -695,37 +698,6 @@ function LazyPig_Dismount()
 	end
 end
 
-local stanceString = string.gsub(SPELL_FAILED_ONLY_SHAPESHIFT, "%%s", "(.+)")
-local stances = {}
-
-function LazyPig_AutoStance(msg)
-	for stancesStr in string.gfind(msg, stanceString) do
-		for _, st in pairs(strsplit(stancesStr, ",", stances)) do
-			CastSpellByName((string.gsub(st, "^%s*(.-)%s*$", "%1")))
-		end
-	end
-end
-
-function LazyPig_ItemIsTradeable(bag, item)
-	for i = 1, 29, 1 do
-		_G["LazyPig_Buff_TooltipTextLeft" .. i]:SetText("");
-	end
-
-	LazyPig_Buff_Tooltip:SetBagItem(bag, item);
-
-	for i = 1, LazyPig_Buff_Tooltip:NumLines(), 1 do
-		local text = _G["LazyPig_Buff_TooltipTextLeft" .. i]:GetText();
-		if  text == ITEM_SOULBOUND  then
-			return nil
-		elseif  text == ITEM_BIND_QUEST  then
-			return nil
-		elseif  text == ITEM_CONJURED  then
-			return nil
-		end
-	end
-	return true
-end
-
 function LazyPig_Raid()
 	local inInstance, instanceType = IsInInstance()
 	return inInstance and instanceType == "raid"
@@ -741,12 +713,12 @@ function LazyPig_BG()
 	return inInstance and instanceType == "pvp"
 end
 
-function LazyPig_DecodeItemLink(link)
-	if link then
-		local found, _, id, name = string.find(link, "item:(%d+):.*%[(.*)%]")
-		if found then
-			id = tonumber(id)
-			return name, id
+function LazyPig_RollLootOpen()
+	for i=1,STATICPOPUP_NUMDIALOGS do
+		local frame = _G["StaticPopup"..i]
+		if frame:IsShown() and frame.which == "CONFIRM_LOOT_ROLL" then
+			--DEFAULT_CHAT_FRAME:AddMessage("LazyPig_RollLootOpen - TRUE")
+			return true
 		end
 	end
 	return nil
@@ -912,28 +884,6 @@ function LazyPig_ChatFrame_OnEvent(event)
 	end
 
 	Original_ChatFrame_OnEvent(event);
-end
-
-function ChatSpamClean()
-	local time = GetTime()
-	local index = ChatMessage["INDEX"]
-	local newindex = nil
-
-	if index == 1 then
-		newindex = 2
-	else
-		newindex = 1
-	end
-
-	for blockindex,blockmatch in pairs(ChatMessage[index]) do
-		if (blockmatch + 70) > time then
-			ChatMessage[newindex][blockindex] = ChatMessage[index][blockindex]
-		end
-	end
-	ChatMessage[index] = twipe(ChatMessage[index])
-	ChatMessage["INDEX"] = newindex
-
-	--DEFAULT_CHAT_FRAME:AddMessage("ChatSpamClean")
 end
 
 function LazyPig_HasRighteousFury()

@@ -3,31 +3,11 @@ local _G = _G or getfenv(0)
 -- Default SavedVariables
 LPCONFIG = {}
 LPCONFIG.DISMOUNT = false           -- Auto Dismount
-LPCONFIG.AUTOSTANCE = false         -- Auto Stance
-LPCONFIG.CAM = false                -- Extended camera distance
 LPCONFIG.GINV = false               -- Auto accept invites from guild members
 LPCONFIG.FINV = false               -- Auto accept invites from friends
 LPCONFIG.SINV = false               -- Auto accept invites from strangers
-LPCONFIG.DINV = false               -- Disable auto accept invite whiel in bg or in bg queue
 LPCONFIG.SUMM = false               -- Auto accept summons
-LPCONFIG.EBG = false                -- Auto join battleground
-LPCONFIG.LBG = false                -- Auto leave battleground
-LPCONFIG.QBG = false                -- Auto queue battleground
-LPCONFIG.RBG = false                -- Auto release spirit in battleground
-LPCONFIG.SBG = false                -- Auto decline quest sharing while in battleground
-LPCONFIG.AQUE = false               -- Announce when queueing for battleground as party leader
 LPCONFIG.LOOT = false               -- Position loot frame at cursor
-LPCONFIG.RIGHT = false              -- Improved right click
-LPCONFIG.GREEN = nil                -- [number or nil] Auto roll on green items
-LPCONFIG.ZG = nil                   -- [number or nil] ZG coins/bijou auto roll
-LPCONFIG.MC = nil                   -- [number or nil] MC mats auto roll
-LPCONFIG.AQ = nil                   -- [number or nil] AQ scarabs/idols auto roll
-LPCONFIG.SAND = nil                 -- [number or nil] Corrupted sand auto roll
-LPCONFIG.ES_SHARDS = nil            -- [number or nil] Dream Shrads auto roll
-LPCONFIG.NAXX = nil                 -- [number or nil] Scraps auto roll
-LPCONFIG.ROLLMSG = false            -- Lazy Pig Auto Roll Messages
-LPCONFIG.DUEL = false               -- Auto cancel duels
-LPCONFIG.SPECIALKEY = false         -- Special key combinations
 LPCONFIG.WORLDDUNGEON = false       -- Mute Wolrd chat while in dungeons
 LPCONFIG.WORLDRAID = false          -- Mute Wolrd chat while in raid
 LPCONFIG.WORLDBG = false            -- Mute Wolrd chat while in battleground
@@ -35,64 +15,25 @@ LPCONFIG.WORLDUNCHECK = false       -- Mute Wolrd chat always
 LPCONFIG.SPAM = false               -- Hide players spam messages
 LPCONFIG.SPAM_UNCOMMON = false      -- Hide green items roll messages
 LPCONFIG.SPAM_RARE = false          -- Hide blue items roll messages
-LPCONFIG.SHIFTSPLIT = false         -- Improved stack splitting with shift
+LPCONFIG.SPAM_EPIC = false          -- Hide epic items roll messages
+LPCONFIG.SPAM_LOOT = false			-- Hide poor and white items loot messages
 LPCONFIG.REZ = false                -- Auto accept resurrection while in raid, dungeon or bg if resurrecter is out of combat
-LPCONFIG.GOSSIP = false             -- Auto proccess gossip
 LPCONFIG.SALVA = nil                -- [number or nil] Autoremove Blessing of Salvation
-LPCONFIG.REMOVEMANABUFFS = false    -- Autoremove Blessing of Wisdom, Arcane Intellect, Prayer of Spirit
 
-local Original_SelectGossipActiveQuest = SelectGossipActiveQuest;
-local Original_SelectGossipAvailableQuest = SelectGossipAvailableQuest;
-local Original_SelectActiveQuest = SelectActiveQuest;
-local Original_SelectAvailableQuest = SelectAvailableQuest;
 local OriginalLootFrame_OnEvent = LootFrame_OnEvent;
 local OriginalLootFrame_Update = LootFrame_Update;
 local Original_ChatFrame_OnEvent = ChatFrame_OnEvent;
 local Original_StaticPopup_OnShow = StaticPopup_OnShow;
-local Original_QuestRewardItem_OnClick = QuestRewardItem_OnClick
 
-local roster_task_refresh = 0
-local last_click = 0
 local delayaction = 0
 local tradedelay = 0
-local bgstatus = 0
-local tmp_splitval = 1
-local passpopup = 0
 
-local ctrltime = 0
-local alttime = 0
-local shift_time = 0
-local ctrlalttime = 0
-local ctrlshifttime = 0
-local altshifttime = 0
-local greenrolltime = 0
-
-local timer_split = nil
 local player_summon_confirm = nil
 local player_summon_message = nil
-local player_bg_confirm = nil
-local player_bg_message = nil
-local afk_active = nil
-local duel_active = nil
-local merchantstatus = nil
-local tradestatus = nil
-local mailstatus = nil
-local auctionstatus = nil
-local auctionbrowse = nil
-local bankstatus = nil
 local channelstatus = nil
-local battleframe = nil
-local wsgefc = nil
 
-local ScheduleButton = {}
 local ScheduleFunction = {}
-local QuestRecord = {}
-local ActiveQuest = {}
-local AvailableQuest = {}
 local ChatMessage = {{}, {}, INDEX = 1}
-local ScheduleSplit = {}
-local ScheduleSplitCount = {}
-local GossipOptions = {}
 
 local function twipe(t)
 	if type(t) == "table" then
@@ -122,16 +63,11 @@ local function strsplit(str, delimiter, container)
 end
 
 function LazyPig_OnLoad()
-	SelectGossipActiveQuest = LazyPig_SelectGossipActiveQuest;
-	SelectGossipAvailableQuest = LazyPig_SelectGossipAvailableQuest;
-	SelectActiveQuest = LazyPig_SelectActiveQuest;
-	SelectAvailableQuest = LazyPig_SelectAvailableQuest;
 	LootFrame_OnEvent = LazyPig_LootFrame_OnEvent;
 	LootFrame_Update = LazyPig_LootFrame_Update;
 	ChatFrame_OnEvent = LazyPig_ChatFrame_OnEvent;
 	StaticPopup_OnShow = LazyPig_StaticPopup_OnShow;
-	QuestRewardItem_OnClick = LazyPig_QuestRewardItem_OnClick
-
+	
 	SLASH_LAZYPIG1 = "/lp";
 	SLASH_LAZYPIG2 = "/lazypig";
 	SlashCmdList["LAZYPIG"] = LazyPig_Command;
@@ -143,11 +79,7 @@ function LazyPig_OnLoad()
 	this:RegisterEvent("PARTY_INVITE_REQUEST")
 	this:RegisterEvent("CONFIRM_SUMMON")
 	this:RegisterEvent("RESURRECT_REQUEST")
-	this:RegisterEvent("GOSSIP_SHOW")
-	this:RegisterEvent("QUEST_GREETING")
 	this:RegisterEvent("UI_ERROR_MESSAGE")
-	this:RegisterEvent("QUEST_PROGRESS")
-	this:RegisterEvent("QUEST_COMPLETE")
 	this:RegisterEvent("ZONE_CHANGED_NEW_AREA")
 	this:RegisterEvent("PLAYER_UNGHOST")
 	this:RegisterEvent("PLAYER_AURAS_CHANGED")
@@ -166,30 +98,6 @@ function LazyPig_OnUpdate()
 		return
 	else
 		this.tick = GetTime() + 0.1
-	end
-
-	local current_time = GetTime();
-	local shiftstatus = IsShiftKeyDown();
-	local ctrlstatus = IsControlKeyDown();
-	local altstatus = IsAltKeyDown();
-
-	if shiftstatus then
-		shift_time = current_time
-	elseif altstatus and not ctrlstatus and current_time > alttime then
-		alttime = current_time + 0.75
-	elseif not altstatus and ctrlstatus and current_time > ctrltime then
-		ctrltime = current_time + 0.75
-	elseif not altstatus and not ctrlstatus or altstatus and ctrlstatus then
-		ctrltime = 0
-		alttime = 0
-	end
-
-	if altstatus then
-		if QuestFrameDetailPanel:IsVisible() then
-			AcceptQuest();
-		end
-	elseif QuestRecord["details"] and not altstatus then
-		LazyPig_RecordQuest();
 	end
 
 	if player_summon_confirm then
@@ -251,7 +159,6 @@ function LazyPig_OnEvent(event)
 		if LPCONFIG.LOOT then
 			UIPanelWindows["LootFrame"] = nil
 		end
-		QuestRecord["index"] = 0
 
 	elseif event == "PLAYER_AURAS_CHANGED" then
 		LazyPig_CheckSalvation()
@@ -271,99 +178,15 @@ function LazyPig_OnEvent(event)
 				end
 			end
 		end
-
+	
 	elseif event == "CHAT_MSG_SYSTEM" then
 		if arg1 == CLEARED_DND or arg1 == CLEARED_AFK then
 			afk_active = false
+			Check_Bg_Status()
 
 		elseif string.find(arg1, string.sub(MARKED_DND, 1, string.len(MARKED_DND) -3)) then
 			afk_active = false
-
-		elseif string.find(arg1 ,"completed.") then
-			LazyPig_FixQuest(arg1)
-			QuestRecord["progress"] = nil
-
-		elseif string.find(arg1 ,"Duel starting:") or string.find(arg1 ,"requested a duel") then
-			duel_active = true
-		elseif string.find(arg1 ,"in a duel") then
-			duel_active = nil
 		end
-
-	elseif event == "QUEST_GREETING" then
-		ActiveQuest = twipe(ActiveQuest)
-		AvailableQuest = twipe(AvailableQuest)
-		for i=1, GetNumActiveQuests() do
-			table.insert(ActiveQuest, i, GetActiveTitle(i).." "..GetActiveLevel(i))
-		end
-		for i=1, GetNumAvailableQuests() do
-			table.insert(AvailableQuest, i, GetAvailableTitle(i).." "..GetAvailableLevel(i))
-		end
-
-		LazyPig_ReplyQuest(event);
-
-		--DEFAULT_CHAT_FRAME:AddMessage("active_: "..table.getn(ActiveQuest))
-		--DEFAULT_CHAT_FRAME:AddMessage("available_: "..table.getn(AvailableQuest))
-
-	elseif event == "GOSSIP_SHOW" then
-		GossipOptions = twipe(GossipOptions)
-		local dsc = nil
-		local gossipnr = nil
-		local gossipbreak = nil
-		local processgossip = LPCONFIG.GOSSIP and not IsShiftKeyDown()
-
-		dsc,GossipOptions[1],_,GossipOptions[2],_,GossipOptions[3],_,GossipOptions[4],_,GossipOptions[5] = GetGossipOptions()
-
-		ActiveQuest = LazyPig_ProcessQuests(GetGossipActiveQuests())
-		AvailableQuest = LazyPig_ProcessQuests(GetGossipAvailableQuests())
-
-		if QuestRecord["qnpc"] ~= UnitName("npc") then
-			QuestRecord["index"] = 0
-			QuestRecord["qnpc"] = UnitName("npc")
-		end
-
-		if table.getn(AvailableQuest) ~= 0 or table.getn(ActiveQuest) ~= 0 then
-			gossipbreak = true
-		end
-
-		--DEFAULT_CHAT_FRAME:AddMessage("gossip: "..table.getn(GossipOptions))
-		--DEFAULT_CHAT_FRAME:AddMessage("active: "..table.getn(ActiveQuest))
-		--DEFAULT_CHAT_FRAME:AddMessage("available: "..table.getn(AvailableQuest))
-
-		for i=1, 5 do
-			if not GossipOptions[i] then
-				break
-			end
-			if GossipOptions[i] == "binder" then
-				local bind = GetBindLocation();
-				if not (bind == GetSubZoneText() or bind == GetZoneText() or bind == GetRealZoneText() or bind == GetMinimapZoneText()) then
-					gossipbreak = true
-				end
-			elseif gossipnr then
-				gossipbreak = true
-			elseif GossipOptions[i] == "trainer" and dsc == "Reset my talents." then
-				gossipbreak = false
-			elseif ((GossipOptions[i] == "trainer" and processgossip)
-					or (GossipOptions[i] == "vendor" and processgossip)
-					or (GossipOptions[i] == "battlemaster" and processgossip)
-					or (GossipOptions[i] == "gossip" and processgossip)
-					or (GossipOptions[i] == "banker" and string.find(dsc, "^I would like to check my deposit box.") and processgossip)
-					or (GossipOptions[i] == "petition" and (IsAltKeyDown()or IsShiftKeyDown() or string.find(dsc, "Teleport me to the Molten Core")) and processgossip))
-				then
-				gossipnr = i
-			elseif GossipOptions[i] == "taxi" and processgossip then
-				gossipnr = i
-				LazyPig_Dismount();
-			end
-		end
-
-		if not gossipbreak and gossipnr then
-			SelectGossipOption(gossipnr);
-		else
-			LazyPig_ReplyQuest(event);
-		end
-
-	elseif event == "QUEST_PROGRESS" or event == "QUEST_COMPLETE" then
-		LazyPig_ReplyQuest(event);
 
 	elseif event == "CONFIRM_SUMMON" then
 		LazyPig_AutoSummon();
@@ -512,168 +335,6 @@ local function MoneyToString(money)
 	return COLOR_GOLD..gold.."g|r "..COLOR_SILVER..silver.."s|r "..COLOR_COPPER..copper.."c|r"
 end
 
-function LazyPig_ProcessQuests(...)
-	local quest = {}
-	for i = 1, table.getn(arg), 2 do
-		local count, title, level = i, arg[i], arg[i+1]
-		if count > 1 then count = (count+1)/2 end
-		quest[count] = title.." "..level
-	end
-	return quest
-end
-
-function LazyPig_SelectGossipActiveQuest(index, norecord)
-	if not ActiveQuest[index] then
-		--DEFAULT_CHAT_FRAME:AddMessage("LazyPig_SelectGossipActiveQuest Error");
-	elseif not norecord then
-		LazyPig_RecordQuest(ActiveQuest[index])
-	end
-	Original_SelectGossipActiveQuest(index);
-end
-
-function LazyPig_SelectGossipAvailableQuest(index, norecord)
-	if not AvailableQuest[index] then
-		--DEFAULT_CHAT_FRAME:AddMessage("LazyPig_SelectGossipAvailableQuest Error");
-	elseif not norecord then
-		LazyPig_RecordQuest(AvailableQuest[index])
-	end
-	Original_SelectGossipAvailableQuest(index);
-end
-
-function LazyPig_SelectActiveQuest(index, norecord)
-	if not ActiveQuest[index] then
-		--DEFAULT_CHAT_FRAME:AddMessage("LazyPig_SelectActiveQuest Error");
-	elseif not norecord then
-		LazyPig_RecordQuest(ActiveQuest[index])
-	end
-	Original_SelectActiveQuest(index);
-end
-
-function LazyPig_SelectAvailableQuest(index, norecord)
-	if not AvailableQuest[index] then
-		--DEFAULT_CHAT_FRAME:AddMessage("LazyPig_SelectAvailableQuest Error");
-	elseif not norecord then
-		LazyPig_RecordQuest(AvailableQuest[index])
-	end
-	Original_SelectAvailableQuest(index);
-end
-
-function LazyPig_FixQuest(quest, annouce)
-	if not QuestRecord["details"] then
-		annouce = true
-	end
-	if UnitLevel("player") == 60 then
-		if string.find(quest, "Fight for Warsong Gulch") then
-			QuestRecord["details"] = "Fight for Warsong Gulch 60"
-		elseif string.find(quest, "Battle of Warsong Gulch") then
-			QuestRecord["details"] = "Battle of Warsong Gulch 60"
-		elseif string.find(quest, "Claiming Arathi Basin") then
-			QuestRecord["details"] = "Claiming Arathi Basin 60"
-		elseif string.find(quest, "Conquering Arathi Basin") then
-			QuestRecord["details"] = "Conquering Arathi Basin 60"
-		end
-	end
-	if QuestRecord["details"] and annouce then
-		UIErrorsFrame:Clear();
-		UIErrorsFrame:AddMessage("Recording: "..QuestRecord["details"])
-	end
-end
-
-function LazyPig_RecordQuest(qdetails)
-	if IsAltKeyDown() and qdetails then
-		if QuestRecord["details"] ~= qdetails then
-			QuestRecord["details"] = qdetails
-		end
-		LazyPig_FixQuest(QuestRecord["details"], true)
-	elseif not IsAltKeyDown() and QuestRecord["details"] then
-		QuestRecord["details"] = nil
-		QuestRecord.itemChoice = nil
-	end
-	QuestRecord["progress"] = true
-end
-
-function LazyPig_QuestRewardItem_OnClick()
-	Original_QuestRewardItem_OnClick()
-	if QuestRecord.details and this.type == "choice" then
-		QuestRewardItemHighlight:SetPoint("TOPLEFT", this, "TOPLEFT", -8, 7);
-		QuestRewardItemHighlight:Show();
-		QuestFrameRewardPanel.itemChoice = this:GetID();
-		QuestRecord.itemChoice = this:GetID();
-	end
-end
-
-function LazyPig_ReplyQuest(event)
-	if not IsAltKeyDown() then
-		return
-	end
-
-	if QuestRecord["details"] then
-		UIErrorsFrame:Clear();
-		UIErrorsFrame:AddMessage("Replaying: "..QuestRecord["details"])
-	end
-
-	if event == "GOSSIP_SHOW" then
-		if QuestRecord["details"] then
-			for blockindex,blockmatch in pairs(ActiveQuest) do
-				if blockmatch == QuestRecord["details"] then
-					Original_SelectGossipActiveQuest(blockindex)
-					return
-				end
-			end
-			for blockindex,blockmatch in pairs(AvailableQuest) do
-				if blockmatch == QuestRecord["details"] then
-					Original_SelectGossipAvailableQuest(blockindex)
-					return
-				end
-			end
-		elseif table.getn(ActiveQuest) == 0 and table.getn(AvailableQuest) == 1 or IsAltKeyDown() and table.getn(AvailableQuest) > 0 then
-			LazyPig_SelectGossipAvailableQuest(1, true)
-		elseif table.getn(ActiveQuest) == 1 and table.getn(AvailableQuest) == 0 or IsAltKeyDown() and table.getn(ActiveQuest) > 0 then
-			local nr = table.getn(ActiveQuest)
-			if QuestRecord["progress"] and (nr - QuestRecord["index"]) > 0 then
-				--DEFAULT_CHAT_FRAME:AddMessage("++quest dec nr - "..nr.." index - "..QuestRecord["index"])
-				QuestRecord["index"] = QuestRecord["index"] + 1
-				nr = nr - QuestRecord["index"]
-			end
-			LazyPig_SelectGossipActiveQuest(nr, true)
-		end
-	elseif event == "QUEST_GREETING" then
-		if QuestRecord["details"] then
-			for blockindex,blockmatch in pairs(ActiveQuest) do
-				if blockmatch == QuestRecord["details"] then
-					Original_SelectActiveQuest(blockindex)
-					return
-				end
-			end
-			for blockindex,blockmatch in pairs(AvailableQuest) do
-				if blockmatch == QuestRecord["details"] then
-					Original_SelectAvailableQuest(blockindex)
-					return
-				end
-			end
-		elseif table.getn(ActiveQuest) == 0 and table.getn(AvailableQuest) == 1 or IsAltKeyDown() and table.getn(AvailableQuest) > 0 then
-			LazyPig_SelectAvailableQuest(1, true)
-		elseif table.getn(ActiveQuest) == 1 and table.getn(AvailableQuest) == 0 or IsAltKeyDown() and table.getn(ActiveQuest) > 0 then
-			local nr = table.getn(ActiveQuest)
-			if QuestRecord["progress"] and (nr - QuestRecord["index"]) > 0 then
-				--DEFAULT_CHAT_FRAME:AddMessage("--quest dec nr - "..nr.." index - "..QuestRecord["index"])
-				QuestRecord["index"] = QuestRecord["index"] + 1
-				nr = nr - QuestRecord["index"]
-			end
-			LazyPig_SelectActiveQuest(nr, true)
-		end
-
-	elseif event == "QUEST_PROGRESS" then
-		CompleteQuest()
-	elseif event == "QUEST_COMPLETE" then
-		if GetNumQuestChoices() == 0 then
-			GetQuestReward(0)
-		elseif GetNumQuestChoices() > 0 and QuestRecord.itemChoice then
-			GetQuestReward(QuestRecord.itemChoice)
-		end
-	end
-end
-
 local dismountStrings = {
 	-- enUS
 	"^Increases speed by (.+)%%",
@@ -711,28 +372,6 @@ end
 function LazyPig_BG()
 	local inInstance, instanceType = IsInInstance()
 	return inInstance and instanceType == "pvp"
-end
-
-function LazyPig_RollLootOpen()
-	for i=1,STATICPOPUP_NUMDIALOGS do
-		local frame = _G["StaticPopup"..i]
-		if frame:IsShown() and frame.which == "CONFIRM_LOOT_ROLL" then
-			--DEFAULT_CHAT_FRAME:AddMessage("LazyPig_RollLootOpen - TRUE")
-			return true
-		end
-	end
-	return nil
-end
-
-function LazyPig_BindLootOpen()
-	for i=1,STATICPOPUP_NUMDIALOGS do
-		local frame = _G["StaticPopup"..i]
-		if frame:IsShown() and frame.which == "LOOT_BIND" then
-			--DEFAULT_CHAT_FRAME:AddMessage("LazyPig_BindLootOpen - TRUE")
-			return true
-		end
-	end
-	return nil
 end
 
 local process = function(ChatFrame, name)
@@ -845,6 +484,7 @@ function LazyPig_ChatFrame_OnEvent(event)
 		local green_roll = greenrolltime > GetTime()
 		local check_uncommon = LPCONFIG.SPAM_UNCOMMON and string.find(arg1 ,"1eff00")
 		local check_rare = LPCONFIG.SPAM_RARE and string.find(arg1 ,"0070dd")
+		local check_epic = LPCONFIG.SPAM_EPIC and string.find(arg1 ,"a335ee")
 		local check_loot = LPCONFIG.SPAM_LOOT and (string.find(arg1 ,"9d9d9d") or string.find(arg1 ,"ffffff") or string.find(arg1 ,"Your share of the loot"))
 		local check_money = LPCONFIG.SPAM_LOOT and string.find(arg1 ,"Your share of the loot")
 
@@ -854,7 +494,7 @@ function LazyPig_ChatFrame_OnEvent(event)
 		local check4 = LPCONFIG.ZG and (bijou or coin)
 		local check5 = check1 and not check4 and not check3 and not green_roll or check2
 
-		if not check5 and (check_uncommon or check_rare) or check_loot and not check1 or check_money then
+		if not check5 and (check_uncommon or check_rare or check_epic) or check_loot and not check1 or check_money then
 			return
 		end
 	end
